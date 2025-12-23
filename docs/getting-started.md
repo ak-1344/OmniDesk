@@ -67,37 +67,62 @@ Domains are categories for organizing your tasks (e.g., College, Work, Personal)
 ### Working with Subtasks
 
 1. Open a task detail page
-2. Click "Add Subtask"
-3. Break down your task into smaller steps
-4. Track progress on each subtask
-5. Schedule time blocks for subtasks
+2. Click "Add Subtask" in any column
+3. Fill in:
+   - Title (required)
+   - Description (optional)
+   - Deadline (optional)
+4. Break down your task into smaller steps
+5. Drag subtasks between columns to track progress
+6. Each subtask shows its description and deadline
+
+### Drag-and-Drop Task Deletion
+
+1. From Dashboard or Tasks page
+2. Drag any task card
+3. Drop it on the floating trash can in the bottom-right corner
+4. Task is immediately moved to trash
+5. Restore from Trash page if needed
 
 ## Features
 
 ### Dashboard
-- Overview of all your tasks by state
-- Quick stats (total tasks, completed, in progress)
+- Kanban-style overview of all your tasks by state
+- Drag-and-drop task state updates
+- Quick stats and progress tracking
 - Filter by domain
-- Recent activity
+- Custom state management
+- Draggable task cards for deletion
 
 ### Task Management
 - Create tasks with rich descriptions
 - Assign to domains
 - Set deadlines
 - Track state progression
-- Add subtasks with individual tracking
-- Attach proof/notes
+- Add subtasks with:
+  - Individual descriptions
+  - Separate deadlines
+  - State tracking
+  - Drag-and-drop organization
+- Kanban-style subtask boards
+- Custom workflow columns
+- Drag tasks to floating trash for quick deletion
 
 ### Ideas
-- Quick capture interface
-- Tag-based organization
+- Notion-inspired minimal interface
+- Quick capture with Ctrl+Enter
+- No forced structure or categories
+- Hover-only action buttons
 - Convert to tasks with one click
-- Search and filter
+- Timestamp tracking
 
 ### Calendar
-- Unified view of deadlines and events
-- Task-linked events
+- Current month display (December 2025)
+- Month/year navigation
+- Today highlighting
+- Task deadlines visualization
 - Subtask scheduling
+- Personal event management
 - Time blocking
 
 ### Trash

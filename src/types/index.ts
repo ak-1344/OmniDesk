@@ -40,14 +40,34 @@ export interface Task {
   proof?: string[];
 }
 
+export type NoteContentType = 'text' | 'image' | 'whiteboard';
+
+export interface NoteContent {
+  id: string;
+  type: NoteContentType;
+  content: string; // For text: the text, for image: URL, for whiteboard: JSON data
+  createdAt: string;
+  order: number;
+}
+
 export interface Idea {
   id: string;
-  title?: string; // Optional - can be just text
-  text: string;
+  title: string;
+  color?: string; // Sticky note color
+  folderId?: string; // Optional folder organization
+  notes: NoteContent[]; // Multiple content pieces
   createdAt: string;
   updatedAt: string;
   deletedAt?: string; // For trash
   tags?: string[];
+  position?: { x: number; y: number }; // For sticky note layout
+}
+
+export interface IdeaFolder {
+  id: string;
+  name: string;
+  color?: string;
+  createdAt: string;
 }
 
 export interface CalendarEvent {
@@ -79,6 +99,7 @@ export interface AppState {
   domains: Domain[];
   tasks: Task[];
   ideas: Idea[];
+  ideaFolders: IdeaFolder[];
   events: CalendarEvent[];
   settings: AppSettings;
   customTaskStates?: TaskState[];

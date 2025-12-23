@@ -1,0 +1,123 @@
+.floating-trash {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 64px;
+  height: 64px;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9999;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.floating-trash:hover {
+  transform: scale(1.1);
+  border-color: rgba(245, 101, 101, 0.5);
+  background: rgba(245, 101, 101, 0.15);
+}
+
+.floating-trash.drag-over {
+  transform: scale(1.2);
+  border-color: var(--error);
+  background: rgba(245, 101, 101, 0.25);
+  box-shadow: 0 8px 32px rgba(245, 101, 101, 0.4);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+.trash-icon {
+  font-size: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.floating-trash:hover .trash-icon {
+  transform: scale(1.15);
+}
+
+.floating-trash.drag-over .trash-icon {
+  transform: scale(1.2);
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+.trash-hint {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 0.5rem;
+  background: rgba(245, 101, 101, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.floating-trash.shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg) scale(1.2);
+  }
+  25% {
+    transform: rotate(-10deg) scale(1.2);
+  }
+  75% {
+    transform: rotate(10deg) scale(1.2);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-trash {
+    width: 56px;
+    height: 56px;
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .trash-icon {
+    font-size: 1.75rem;
+  }
+}

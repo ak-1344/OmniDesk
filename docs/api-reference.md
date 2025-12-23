@@ -156,14 +156,14 @@ if (task) {
 
 ### `addSubtask(taskId: string, subtask: Omit<Subtask, 'id'>): void`
 
-Adds a subtask to an existing task.
+Adds a subtask to an existing task with enhanced properties including description and deadline.
 
 **Parameters**:
 - `taskId` (string): Parent task ID
 - `subtask.title` (string): Subtask title
-- `subtask.description` (string, optional): Subtask description
+- `subtask.description` (string, optional): Detailed subtask description
 - `subtask.state` (SubtaskState): Initial state ('todo' | 'in-progress' | 'completed')
-- `subtask.deadline` (string, optional): ISO date string
+- `subtask.deadline` (string, optional): ISO date string for subtask deadline
 - `subtask.scheduledTime` (object, optional): Scheduled time block
 - `subtask.proof` (string, optional): URL or file path
 
@@ -171,6 +171,7 @@ Adds a subtask to an existing task.
 ```typescript
 addSubtask('task-123', {
   title: 'Research best practices',
+  description: 'Look into industry standards and common patterns',
   state: 'todo',
   deadline: '2025-12-25T17:00:00.000Z',
   scheduledTime: {

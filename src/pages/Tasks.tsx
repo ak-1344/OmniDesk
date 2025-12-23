@@ -11,6 +11,10 @@ const Tasks = () => {
   const [filterState, setFilterState] = useState<string>('all');
 
   const activeTasks = state.tasks.filter(task => !task.deletedAt);
+
+  const handleDragStart = (taskId: string, e: React.DragEvent) => {
+    e.dataTransfer.setData('taskId', taskId);
+  };
   
   const filteredTasks = activeTasks.filter(task => {
     if (filterDomain !== 'all' && task.domainId !== filterDomain) return false;
@@ -96,8 +100,14 @@ const Tasks = () => {
             const progress = getTaskProgress(task);
 
             return (
-              <Link to={`/tasks/${task.id}`} key={task.id} className="task-card">
-                <div className="task-card-header">
+              <div
+                key={task.id}
+                className="task-card-wrapper"
+                draggable
+                onDragStart={(e) => handleDragStart(task.id, e)}
+              >
+                <Link to={`/tasks/${task.id}`} className="task-card">
+                  <div className="task-card-header">
                   <span 
                     className="domain-badge"
                     style={{ 
@@ -140,6 +150,7 @@ const Tasks = () => {
                   )}
                 </div>
               </Link>
+              </div>
             );
           })}
         </div>
