@@ -122,7 +122,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [trash]);
 
   // Helper to generate IDs
-  const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+  const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
   // Domain operations
   const addDomain = (domain: Omit<Domain, 'id'>) => {

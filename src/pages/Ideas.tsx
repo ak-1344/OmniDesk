@@ -78,7 +78,7 @@ const Ideas = () => {
             }}
           />
           <div className="idea-input-actions">
-            <span className="hint-text">Press Ctrl+Enter to save quickly</span>
+            <span className="hint-text">Tip: Press Ctrl+Enter to save quickly</span>
             <button 
               className="btn-primary" 
               onClick={handleSaveIdea}
