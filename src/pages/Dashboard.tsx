@@ -1,15 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import CreateTaskModal from '../components/CreateTaskModal';
 import type { TaskState } from '../types';
 import './Dashboard.css';
 
+interface KanbanState {
+  id: TaskState;
+  label: string;
+  description: string;
+  color: string;
+  gradient: string;
+  icon: string;
+  isDefault: boolean;
+}
+
 const Dashboard = () => {
   const { state, updateTask } = useApp();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterDomain, setFilterDomain] = useState<string>('all');
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  const [showStateManager, setShowStateManager] = useState(false);
+  const [editingState, setEditingState] = useState<TaskState | null>(null);
+  const [newStateName, setNewStateName] = useState('');
+  const [newStateDescription, setNewStateDescription] = useState('');
+  const [newStateIcon, setNewStateIcon] = useState('📌');
+
+  // Default Kanban states
+  const defaultStates: KanbanState[] = [
+    { 
+      id: 'gotta-start', 
+      label: 'Gotta Start', 
+      description: 'Ready to begin',
+      color: '#667eea',
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: '🎯',
+      isDefault: true
+    },
+    { 
+      id: 'in-progress', 
+      label: 'In Progress', 
+      description: 'Currently working',
+      color: '#f093fb',
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      icon: '⚡',
+      isDefault: true
+    },
+    { 
+      id: 'nearly-done', 
+      label: 'Nearly Done', 
+      description: 'Almost finished',
+      color: '#4facfe',
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      icon: '🎉',
+      isDefault: true
+    },
+    { 
+      id: 'paused', 
+      label: 'Paused', 
+      description: 'On hold',
+      color: '#a8edea',
+      gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+      icon: '⏸️',
+      isDefault: true
+    },
+    { 
+      id: 'completed', 
+      label: 'Completed', 
+      description: 'Done & dusted',
+      color: '#43e97b',
+      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      icon: '✅',
+      isDefault: true
+    },
+  ];
+
+  const [kanbanStates, setKanbanStates] = useState<KanbanState[]>(() => {
+    const saved = localStorage.getItem('omniDesk_kanbanStates');
+    return saved ? JSON.parse(saved) : defaultStates;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('omniDesk_kanbanStates', JSON.stringify(kanbanStates));
+  }, [kanbanStates]);
 
   // Get all tasks including completed (for full Kanban view)
   const allTasks = state.tasks.filter(task => !task.deletedAt);
@@ -20,13 +93,10 @@ const Dashboard = () => {
     : allTasks.filter(task => task.domainId === filterDomain);
 
   // Group tasks by state - Kanban columns
-  const tasksByState: Record<TaskState, typeof allTasks> = {
-    'gotta-start': [],
-    'in-progress': [],
-    'nearly-done': [],
-    'paused': [],
-    'completed': [],
-  };
+  const tasksByState: Record<string, typeof allTasks> = {};
+  kanbanStates.forEach(s => {
+    tasksByState[s.id] = [];
+  });
 
   filteredTasks.forEach(task => {
     if (tasksByState[task.state]) {
@@ -38,7 +108,7 @@ const Dashboard = () => {
     return state.domains.find(d => d.id === domainId);
   };
 
-  const getTaskProgress = (task: typeof activeTasks[0]) => {
+  const getTaskProgress = (task: typeof allTasks[0]) => {
     if (task.subtasks.length === 0) return 0;
     const completed = task.subtasks.filter(s => s.state === 'completed').length;
     return Math.round((completed / task.subtasks.length) * 100);
@@ -59,44 +129,6 @@ const Dashboard = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const stateConfig: Record<TaskState, { label: string; description: string; color: string; gradient: string; icon: string }> = {
-    'gotta-start': { 
-      label: 'Gotta Start', 
-      description: 'Ready to begin',
-      color: '#9e9e9e',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      icon: '🎯'
-    },
-    'in-progress': { 
-      label: 'In Progress', 
-      description: 'Currently working',
-      color: '#ed8936',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      icon: '⚡'
-    },
-    'nearly-done': { 
-      label: 'Nearly Done', 
-      description: 'Almost finished',
-      color: '#48bb78',
-      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      icon: '🎉'
-    },
-    'paused': { 
-      label: 'Paused', 
-      description: 'On hold',
-      color: '#4299e1',
-      gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-      icon: '⏸️'
-    },
-    'completed': { 
-      label: 'Completed', 
-      description: 'Done & dusted',
-      color: '#48bb78',
-      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      icon: '✅'
-    },
-  };
-
   const handleDragStart = (taskId: string) => {
     setDraggedTask(taskId);
   };
@@ -112,11 +144,65 @@ const Dashboard = () => {
     }
   };
 
+  // CRUD operations for Kanban states
+  const handleAddState = () => {
+    if (newStateName.trim()) {
+      const stateId = newStateName.toLowerCase().replace(/\s+/g, '-') as TaskState;
+      const colors = ['#4facfe', '#fa709a', '#ffa751', '#c471f5', '#12c2e9', '#f77062', '#56ab2f'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      const newState: KanbanState = {
+        id: stateId,
+        label: newStateName,
+        description: newStateDescription || 'Custom state',
+        color: randomColor,
+        gradient: `linear-gradient(135deg, ${randomColor} 0%, ${randomColor}dd 100%)`,
+        icon: newStateIcon,
+        isDefault: false
+      };
+
+      setKanbanStates([...kanbanStates, newState]);
+      setNewStateName('');
+      setNewStateDescription('');
+      setNewStateIcon('📌');
+      setShowStateManager(false);
+    }
+  };
+
+  const handleUpdateState = (stateId: TaskState) => {
+    setKanbanStates(kanbanStates.map(s => 
+      s.id === stateId 
+        ? { ...s, label: newStateName, description: newStateDescription, icon: newStateIcon }
+        : s
+    ));
+    setEditingState(null);
+    setNewStateName('');
+    setNewStateDescription('');
+    setNewStateIcon('📌');
+  };
+
+  const handleDeleteState = (stateId: TaskState) => {
+    const hasTasks = tasksByState[stateId]?.length > 0;
+    if (hasTasks) {
+      alert('Cannot delete state with tasks. Move or delete tasks first.');
+      return;
+    }
+    setKanbanStates(kanbanStates.filter(s => s.id !== stateId));
+  };
+
+  const startEditState = (kanbanState: KanbanState) => {
+    setEditingState(kanbanState.id);
+    setNewStateName(kanbanState.label);
+    setNewStateDescription(kanbanState.description);
+    setNewStateIcon(kanbanState.icon);
+    setShowStateManager(true);
+  };
+
   const stats = [
     { label: 'Total Tasks', value: allTasks.length.toString(), color: '#667eea', icon: '📊' },
-    { label: 'In Progress', value: tasksByState['in-progress'].length.toString(), color: '#ed8936', icon: '⚡' },
-    { label: 'Nearly Done', value: tasksByState['nearly-done'].length.toString(), color: '#48bb78', icon: '🎯' },
-    { label: 'Completed', value: tasksByState['completed'].length.toString(), color: '#43e97b', icon: '✅' },
+    { label: 'In Progress', value: (tasksByState['in-progress']?.length || 0).toString(), color: '#ed8936', icon: '⚡' },
+    { label: 'Nearly Done', value: (tasksByState['nearly-done']?.length || 0).toString(), color: '#48bb78', icon: '🎯' },
+    { label: 'Completed', value: (tasksByState['completed']?.length || 0).toString(), color: '#43e97b', icon: '✅' },
   ];
 
   return (
@@ -159,7 +245,79 @@ const Dashboard = () => {
             ))}
           </select>
         </div>
+        <button 
+          className="btn-manage-states" 
+          onClick={() => setShowStateManager(!showStateManager)}
+        >
+          ⚙️ Manage States
+        </button>
       </div>
+
+      {showStateManager && (
+        <div className="state-manager">
+          <div className="state-manager-header">
+            <h3>{editingState ? 'Edit State' : 'Add New State'}</h3>
+            <button onClick={() => {
+              setShowStateManager(false);
+              setEditingState(null);
+              setNewStateName('');
+              setNewStateDescription('');
+              setNewStateIcon('📌');
+            }}>×</button>
+          </div>
+          <div className="state-form">
+            <input
+              type="text"
+              placeholder="State name..."
+              value={newStateName}
+              onChange={(e) => setNewStateName(e.target.value)}
+              maxLength={20}
+            />
+            <input
+              type="text"
+              placeholder="Description..."
+              value={newStateDescription}
+              onChange={(e) => setNewStateDescription(e.target.value)}
+              maxLength={50}
+            />
+            <input
+              type="text"
+              placeholder="Icon emoji..."
+              value={newStateIcon}
+              onChange={(e) => setNewStateIcon(e.target.value)}
+              maxLength={2}
+            />
+            <button 
+              onClick={() => editingState ? handleUpdateState(editingState) : handleAddState()}
+              className="btn-primary btn-sm"
+            >
+              {editingState ? 'Update' : 'Add'} State
+            </button>
+          </div>
+          
+          <div className="states-list">
+            <h4>Current States</h4>
+            {kanbanStates.map(kanbanState => (
+              <div key={kanbanState.id} className="state-item" style={{ borderLeft: `4px solid ${kanbanState.color}` }}>
+                <span className="state-icon">{kanbanState.icon}</span>
+                <div className="state-info">
+                  <strong>{kanbanState.label}</strong>
+                  <small>{kanbanState.description}</small>
+                </div>
+                {!kanbanState.isDefault && (
+                  <div className="state-actions">
+                    <button onClick={() => startEditState(kanbanState)} title="Edit">✏️</button>
+                    <button onClick={() => handleDeleteState(kanbanState.id)} title="Delete">🗑️</button>
+                  </div>
+                )}
+                {kanbanState.isDefault && (
+                  <span className="default-badge">Default</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {allTasks.length === 0 ? (
         <div className="empty-state">
@@ -171,24 +329,23 @@ const Dashboard = () => {
           </button>
         </div>
       ) : (
-        <div className="kanban-board">
-          {(Object.keys(stateConfig) as TaskState[]).map((stateKey) => {
-            const config = stateConfig[stateKey];
-            const stateTasks = tasksByState[stateKey];
+        <div className="kanban-board-grid">
+          {kanbanStates.map((kanbanState) => {
+            const stateTasks = tasksByState[kanbanState.id] || [];
 
             return (
               <div 
-                key={stateKey} 
+                key={kanbanState.id} 
                 className="kanban-column"
                 onDragOver={handleDragOver}
-                onDrop={() => handleDrop(stateKey)}
+                onDrop={() => handleDrop(kanbanState.id as TaskState)}
               >
-                <div className="column-header" style={{ background: config.gradient }}>
+                <div className="column-header" style={{ background: kanbanState.gradient }}>
                   <div className="column-info">
-                    <span className="column-icon">{config.icon}</span>
+                    <span className="column-icon">{kanbanState.icon}</span>
                     <div>
-                      <h3 className="column-title">{config.label}</h3>
-                      <p className="column-description">{config.description}</p>
+                      <h3 className="column-title">{kanbanState.label}</h3>
+                      <p className="column-description">{kanbanState.description}</p>
                     </div>
                   </div>
                   <span className="column-count">{stateTasks.length}</span>
@@ -245,7 +402,7 @@ const Dashboard = () => {
                                     className="progress-fill" 
                                     style={{ 
                                       width: `${progress}%`,
-                                      background: config.gradient
+                                      background: kanbanState.gradient
                                     }}
                                   />
                                 </div>
