@@ -35,6 +35,7 @@
   width: 100%;
   padding: 2.5rem;
   animation: fadeIn 0.5s ease-out;
+  min-height: 100vh;
 }
 
 .page-header {
