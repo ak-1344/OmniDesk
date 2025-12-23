@@ -113,3 +113,6 @@ export interface TrashItem {
   deletedAt: string;
   deletedBy: string;
 }
+
+// Re-export storage interface for convenience
+export type { IDataStorage } from '../lib/storage.interface';

@@ -10,7 +10,6 @@ import type {
   CalendarEvent,
   AppSettings,
   TrashItem,
-  NoteContent,
 } from '../types';
 
 export interface IDataStorage {
