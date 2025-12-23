@@ -1,7 +1,7 @@
 // Storage factory to get the appropriate storage adapter
-import { getStorageBackend } from './supabase';
+import { getStorageBackend } from './mongodb';
 import { LocalStorageAdapter } from './storage.localstorage';
-import { SupabaseAdapter } from './storage.supabase';
+import { MongoDBAdapter } from './storage.mongodb';
 import type { IDataStorage } from './storage.interface';
 
 let storageInstance: IDataStorage | null = null;
@@ -13,14 +13,14 @@ export async function getStorage(): Promise<IDataStorage> {
 
   const backend = getStorageBackend();
 
-  if (backend === 'supabase') {
-    const adapter = new SupabaseAdapter();
+  if (backend === 'mongodb') {
+    const adapter = new MongoDBAdapter();
     try {
       await adapter.initialize();
       storageInstance = adapter;
-      console.log('Using Supabase storage backend');
+      console.log('Using MongoDB storage backend');
     } catch (error) {
-      console.error('Failed to initialize Supabase, falling back to LocalStorage:', error);
+      console.error('Failed to initialize MongoDB, falling back to LocalStorage:', error);
       storageInstance = new LocalStorageAdapter();
       console.log('Using LocalStorage backend');
     }
