@@ -1,7 +1,7 @@
 .sidebar {
-  width: 250px;
+  width: 80px;
   height: 100vh;
-  background: rgba(10, 10, 15, 0.6);
+  background: rgba(10, 10, 15, 0.75);
   backdrop-filter: blur(20px) saturate(180%);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
@@ -10,14 +10,24 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.sidebar:hover {
+  width: 250px;
 }
 
 .sidebar-header {
-  padding: 2rem 1.5rem;
+  padding: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-title {
@@ -29,7 +39,14 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.02em;
-  text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar:not(:hover) .sidebar-title {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .sidebar-nav {
@@ -67,6 +84,13 @@
   border-radius: 12px;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
+  justify-content: flex-start;
+}
+
+.sidebar:not(:hover) .nav-item {
+  padding: 0.875rem;
+  justify-content: center;
 }
 
 .nav-item::before {
@@ -100,14 +124,18 @@
 
 .nav-icon {
   font-size: 1.25rem;
-  margin-right: 1rem;
+  min-width: 1.5rem;
   width: 1.5rem;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
 
 .nav-item:hover .nav-icon {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .nav-item.active .nav-icon {
@@ -118,4 +146,14 @@
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+  margin-left: 1rem;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+
+.sidebar:not(:hover) .nav-label {
+  opacity: 0;
+  transform: translateX(-10px);
+  width: 0;
+  overflow: hidden;
 }

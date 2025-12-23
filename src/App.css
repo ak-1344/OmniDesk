@@ -1,8 +1,9 @@
 .app {
-  display: flex;
+  width: 100%;
   min-height: 100vh;
   background: var(--bg-primary);
   position: relative;
+  overflow-x: hidden;
 }
 
 .app::before {
@@ -21,16 +22,17 @@
 }
 
 .main-content {
-  flex: 1;
-  margin-left: 250px;
+  width: 100%;
+  padding-left: 0;
   background: transparent;
-  min-height: 100vh;
   position: relative;
   z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .page {
-  min-height: 100vh;
+  width: 100%;
   padding: 2.5rem;
   animation: fadeIn 0.5s ease-out;
 }
