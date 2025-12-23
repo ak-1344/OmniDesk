@@ -96,12 +96,18 @@ const { state, addTask, updateTask, deleteTask } = useApp();
 ### 3. Compound Components
 Modals and forms use compound component patterns for flexibility.
 
-### 4. Local-First Architecture
-All data stored in browser localStorage with no backend dependency:
-- **Fast**: No network latency
-- **Private**: Data never leaves the device
-- **Offline**: Works without internet
-- **Simple**: No server infrastructure needed
+### 4. Local-First Architecture with Optional Cloud Sync
+Data storage options:
+- **LocalStorage (Default)**: All data stored in browser localStorage
+  - **Fast**: No network latency
+  - **Private**: Data never leaves the device
+  - **Offline**: Works without internet
+  - **Simple**: No server infrastructure needed
+- **Supabase (Optional)**: Cloud-based PostgreSQL with real-time sync
+  - **Multi-device**: Access from anywhere
+  - **Real-time**: Live updates across sessions
+  - **Backup**: Automatic data backup
+  - **Collaboration**: Share tasks with team (future feature)
 
 ## State Schema
 
@@ -248,4 +254,6 @@ Modern glass-like effects using:
 - [ ] IndexedDB migration for larger datasets
 - [ ] Service Worker for offline functionality
 - [ ] Web Worker for background processing
-- [ ] Optional cloud sync with E2E encryption
+- [x] Optional cloud sync with Supabase
+- [ ] End-to-end encryption for cloud sync
+- [ ] Team collaboration features
