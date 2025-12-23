@@ -72,6 +72,15 @@
   gap: 1.5rem;
 }
 
+.task-card-wrapper {
+  cursor: grab;
+}
+
+.task-card-wrapper:active {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+
 .task-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop);
@@ -86,6 +95,7 @@
   min-height: 220px;
   position: relative;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .task-card::before {

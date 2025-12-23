@@ -1,16 +1,17 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Sidebar from './components/Sidebar';
+import FloatingTrash from './components/FloatingTrash';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Ideas from './pages/Ideas';
+import IdeaCreate from './pages/IdeaCreate';
 import AllTasks from './pages/AllTasks';
 import Calendar from './pages/Calendar';
 import Terminal from './pages/Terminal';
 import Trash from './pages/Trash';
 import Settings from './pages/Settings';
-import Portfolio from './pages/Portfolio';
 import './App.css';
 
 function App() {
@@ -25,14 +26,15 @@ function App() {
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/tasks/:id" element={<TaskDetail />} />
               <Route path="/ideas" element={<Ideas />} />
+              <Route path="/ideas/new" element={<IdeaCreate />} />
               <Route path="/all-tasks" element={<AllTasks />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/terminal" element={<Terminal />} />
               <Route path="/trash" element={<Trash />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/portfolio" element={<Portfolio />} />
             </Routes>
           </main>
+          <FloatingTrash />
         </div>
       </Router>
     </AppProvider>

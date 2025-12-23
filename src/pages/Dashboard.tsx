@@ -129,8 +129,9 @@ const Dashboard = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const handleDragStart = (taskId: string) => {
+  const handleDragStart = (taskId: string, e: React.DragEvent) => {
     setDraggedTask(taskId);
+    e.dataTransfer.setData('taskId', taskId);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -368,7 +369,7 @@ const Dashboard = () => {
                           key={task.id} 
                           className="kanban-card"
                           draggable
-                          onDragStart={() => handleDragStart(task.id)}
+                          onDragStart={(e) => handleDragStart(task.id, e)}
                         >
                           <Link to={`/tasks/${task.id}`} className="card-link">
                             <div className="card-header">

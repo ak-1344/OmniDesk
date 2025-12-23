@@ -3,10 +3,12 @@
 OmniDesk is a lightweight productivity cockpit built with React, TypeScript, and Vite. It keeps your domains, tasks, ideas, calendar events, and trash management in one place, persisting state locally so you can pick up where you left off.
 
 ## Features
-- Dashboard navigation with sidebar access to tasks, calendar, ideas, trash, settings, and portfolio views
-- Task and subtask management with states, deadlines, and domain tagging
-- Idea capture with quick conversion to tasks
-- Calendar events mapped to tasks and subtasks
+- Dashboard navigation with sidebar access to tasks, calendar, ideas, trash, and settings
+- Task and subtask management with states, deadlines, descriptions, and domain tagging
+- Notion-inspired idea capture with quick conversion to tasks
+- Calendar integration showing current month with event management
+- Drag-and-drop task deletion with floating trash can
+- Dynamic sidebar with lock/unlock for optimal screen space
 - Local persistence via browser storage with trash and restore flows
 
 ## Tech Stack
@@ -47,11 +49,11 @@ npm run preview
 ```
 
 ## Project Structure
-- src/App.tsx sets up routing and layout
+- src/App.tsx sets up routing and layout with dynamic sidebar adjustment
 - src/context/AppContext.tsx holds app state, persistence, and domain/task/idea/calendar/trash operations
-- src/pages/ contains routed screens (Dashboard, Tasks, TaskDetail, Ideas, AllTasks, Calendar, Terminal, Trash, Settings, Portfolio)
-- src/components/ contains shared UI like sidebar and modals
-- src/types/ centralizes domain types
+- src/pages/ contains routed screens (Dashboard, Tasks, TaskDetail, Ideas, AllTasks, Calendar, Terminal, Trash, Settings)
+- src/components/ contains shared UI like Sidebar, FloatingTrash, and modals
+- src/types/ centralizes domain types with enhanced subtask properties
 
 ## Deployment
 - Build with npm run build; deploy the dist/ directory to any static host (Vercel, Netlify, S3 + CDN, GitHub Pages).

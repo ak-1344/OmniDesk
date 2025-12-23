@@ -24,7 +24,9 @@ const Trash = () => {
       return task.title;
     } else if (item.type === 'idea') {
       const idea = item.item as Idea;
-      return idea.text.substring(0, 100) + (idea.text.length > 100 ? '...' : '');
+      const textNote = idea.notes.find(n => n.type === 'text');
+      const text = textNote ? textNote.content : idea.title || 'Untitled idea';
+      return text.substring(0, 100) + (text.length > 100 ? '...' : '');
     }
     return 'Unknown item';
   };

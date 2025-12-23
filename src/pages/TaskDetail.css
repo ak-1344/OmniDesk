@@ -495,7 +495,8 @@
   animation: slideIn 0.3s ease;
 }
 
-.add-subtask-form input {
+.add-subtask-form input,
+.add-subtask-form textarea {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
@@ -504,11 +505,27 @@
   font-size: 0.95rem;
   outline: none;
   transition: all 0.3s ease;
+  font-family: inherit;
 }
 
-.add-subtask-form input:focus {
+.add-subtask-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.add-subtask-form input:focus,
+.add-subtask-form textarea:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.subtask-deadline {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .form-actions {

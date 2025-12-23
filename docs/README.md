@@ -29,9 +29,11 @@ Welcome to the OmniDesk documentation! This guide will help you understand the a
 OmniDesk is a modern productivity application built with React, TypeScript, and Vite. It provides a comprehensive solution for managing tasks, ideas, calendar events, and more, all stored locally in your browser.
 
 ### Key Features
-- **Task Management**: Organize tasks with domains, states, deadlines, and subtasks
-- **Idea Capture**: Quickly save ideas and convert them to actionable tasks
-- **Calendar Integration**: View and manage events linked to your tasks
+- **Task Management**: Organize tasks with domains, states, deadlines, and enhanced subtasks (with descriptions and deadlines)
+- **Idea Capture**: Notion-inspired minimalist interface for quickly saving ideas and converting them to actionable tasks
+- **Calendar Integration**: View current month with events linked to your tasks and subtasks
+- **Drag-and-Drop Deletion**: Floating trash can for quick task deletion via drag-and-drop
+- **Adaptive Layout**: Dynamic sidebar that adjusts content area for optimal screen usage
 - **Local Storage**: All data persists in your browser - no backend required
 - **Modern UI**: Glassmorphism design with smooth animations and transitions
 

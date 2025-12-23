@@ -41,6 +41,8 @@ const TaskDetail = () => {
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [showAddSubtask, setShowAddSubtask] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
+  const [newSubtaskDeadline, setNewSubtaskDeadline] = useState('');
 
   const task = getTask(id || '');
   
@@ -95,9 +97,13 @@ const TaskDetail = () => {
     if (newSubtaskTitle.trim() && task) {
       addSubtask(task.id, {
         title: newSubtaskTitle,
+        description: newSubtaskDescription || undefined,
         state: columnId,
+        deadline: newSubtaskDeadline || undefined,
       });
       setNewSubtaskTitle('');
+      setNewSubtaskDescription('');
+      setNewSubtaskDeadline('');
       setShowAddSubtask(null);
     }
   };
@@ -260,6 +266,9 @@ const TaskDetail = () => {
                         {item.description && (
                           <p className="subtask-description">{item.description}</p>
                         )}
+                        {item.deadline && (
+                          <p className="subtask-deadline">📅 {new Date(item.deadline).toLocaleDateString()}</p>
+                        )}
                       </div>
                       <button 
                         className="btn-delete-subtask"
@@ -285,8 +294,19 @@ const TaskDetail = () => {
                         placeholder="Subtask title..."
                         value={newSubtaskTitle}
                         onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddSubtask(column.id)}
                         autoFocus
+                      />
+                      <textarea
+                        placeholder="Description (optional)..."
+                        value={newSubtaskDescription}
+                        onChange={(e) => setNewSubtaskDescription(e.target.value)}
+                        rows={2}
+                      />
+                      <input
+                        type="date"
+                        placeholder="Deadline (optional)..."
+                        value={newSubtaskDeadline}
+                        onChange={(e) => setNewSubtaskDeadline(e.target.value)}
                       />
                       <div className="form-actions">
                         <button onClick={() => handleAddSubtask(column.id)} className="btn-primary btn-sm">
@@ -296,6 +316,8 @@ const TaskDetail = () => {
                           onClick={() => {
                             setShowAddSubtask(null);
                             setNewSubtaskTitle('');
+                            setNewSubtaskDescription('');
+                            setNewSubtaskDeadline('');
                           }} 
                           className="btn-secondary btn-sm"
                         >

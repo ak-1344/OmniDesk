@@ -1,6 +1,9 @@
 .calendar-page {
-  padding: 2.5rem;
+  padding: 2rem;
   animation: fadeIn 0.5s ease-out;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .calendar-controls {
@@ -38,14 +41,15 @@
 
 .calendar-container {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.5rem;
+  max-width: 1400px;
 }
 
 .calendar-grid {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-md);
@@ -78,13 +82,15 @@
 .calendar-day {
   aspect-ratio: 1;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  min-height: 60px;
 }
 
 .calendar-day:hover {
@@ -97,12 +103,24 @@
 .calendar-day.empty {
   border: none;
   background: transparent;
+  cursor: default;
 }
 
 .calendar-day.today {
   border-color: var(--accent-primary);
   background: rgba(102, 126, 234, 0.15);
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.calendar-day.selected {
+  border-color: #4facfe;
+  background: rgba(79, 172, 254, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.4);
+}
+
+.calendar-day.selected .day-number {
+  color: #4facfe;
+  font-weight: 700;
 }
 
 .calendar-day.today .day-number {
@@ -135,12 +153,17 @@
   border-radius: 50%;
 }
 
-.event-dot.meeting {
+.event-dot.meeting,
+.event-dot.event {
   background: #667eea;
 }
 
 .event-dot.task {
   background: #48bb78;
+}
+
+.event-dot.deadline {
+  background: #f56565;
 }
 
 .more-events {
@@ -158,13 +181,43 @@
   max-height: 600px;
   overflow-y: auto;
   box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
 }
 
-.events-sidebar h3 {
-  margin: 0 0 1.5rem 0;
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-header h3 {
+  margin: 0;
   font-size: 1.35rem;
   color: var(--text-primary);
   font-weight: 700;
+}
+
+.btn-add-item {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-add-item:hover {
+  transform: scale(1.1);
+  background: var(--accent-secondary);
 }
 
 .events-list {
@@ -206,6 +259,20 @@
   background: var(--gradient-green);
 }
 
+.event-item.deadline::before {
+  background: linear-gradient(135deg, #f56565 0%, #ed8936 100%);
+}
+
+.event-item {
+  position: relative;
+  cursor: grab;
+}
+
+.event-item:active {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+
 .event-header {
   display: flex;
   gap: 0.75rem;
@@ -236,7 +303,178 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text-tertiary);
+}
+
+.event-description {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.event-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.event-item:hover .event-actions {
+  opacity: 1;
+}
+
+.btn-edit,
+.btn-delete {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.btn-delete:hover {
+  background: rgba(245, 101, 101, 0.1);
+}
+
+/* Add Item Modal */
+.add-item-modal {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: slideIn 0.3s ease;
+}
+
+.add-item-modal h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.item-type-select,
+.item-input,
+.item-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.item-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.item-type-select:focus,
+.item-input:focus,
+.item-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Edit Mode */
+.edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.edit-textarea {
+  resize: vertical;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-save,
+.btn-cancel {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-save {
+  background: var(--accent-primary);
+  border: none;
+  color: white;
+}
+
+.btn-save:hover {
+  background: var(--accent-secondary);
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* No Events State */
+.no-events,
+.no-selection {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-tertiary);
+}
+
+.no-events p,
+.no-selection p {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 1024px) {

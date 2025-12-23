@@ -39,6 +39,7 @@ const initialState: AppState = {
   domains: defaultDomains,
   tasks: [],
   ideas: [],
+  ideaFolders: [],
   events: [],
   settings: defaultSettings,
 };
@@ -277,9 +278,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const convertIdeaToTask = (ideaId: string, domainId: string, state: TaskState) => {
     const idea = getIdea(ideaId);
     if (idea) {
+      const textContent = idea.notes.find(n => n.type === 'text')?.content || '';
       addTask({
-        title: idea.title || idea.text.substring(0, 50),
-        description: idea.text,
+        title: idea.title || textContent.substring(0, 50),
+        description: textContent,
         domainId,
         state,
       });

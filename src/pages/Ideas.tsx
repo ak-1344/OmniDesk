@@ -1,169 +1,115 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import ConvertIdeaModal from '../components/ConvertIdeaModal';
 import './Ideas.css';
 
 const Ideas = () => {
-  const { state, addIdea, updateIdea, deleteIdea } = useApp();
-  const [newIdeaText, setNewIdeaText] = useState('');
-  const [convertingIdeaId, setConvertingIdeaId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
-
-  const handleSaveIdea = () => {
-    if (newIdeaText.trim()) {
-      addIdea({ text: newIdeaText });
-      setNewIdeaText('');
-    }
-  };
-
-  const handleStartEdit = (id: string, text: string) => {
-    setEditingId(id);
-    setEditText(text);
-  };
-
-  const handleSaveEdit = () => {
-    if (editingId && editText.trim()) {
-      updateIdea(editingId, { text: editText });
-      setEditingId(null);
-      setEditText('');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditText('');
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return date.toLocaleDateString();
-  };
+  const { state, deleteIdea } = useApp();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const activeIdeas = state.ideas.filter(idea => !idea.deletedAt);
+
+  const filteredIdeas = activeIdeas.filter(idea =>
+    idea.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCreateNew = () => {
+    navigate('/ideas/new');
+  };
+
+  const handleOpenIdea = (ideaId: string) => {
+    navigate(`/ideas/${ideaId}`);
+  };
+
+  const handleDeleteIdea = (e: React.MouseEvent, ideaId: string, title: string) => {
+    e.stopPropagation();
+    if (confirm(`Delete "${title}"?`)) {
+      deleteIdea(ideaId);
+    }
+  };
+
+  const getPreviewText = (idea: typeof activeIdeas[0]): string => {
+    const textNote = idea.notes.find(n => n.type === 'text');
+    if (textNote && textNote.content) {
+      return textNote.content.slice(0, 120);
+    }
+    const imageCount = idea.notes.filter(n => n.type === 'image').length;
+    const whiteboardCount = idea.notes.filter(n => n.type === 'whiteboard').length;
+    const parts = [];
+    if (imageCount) parts.push(`${imageCount} image${imageCount > 1 ? 's' : ''}`);
+    if (whiteboardCount) parts.push(`${whiteboardCount} whiteboard${whiteboardCount > 1 ? 's' : ''}`);
+    return parts.join(', ') || 'Empty note';
+  };
 
   return (
     <div className="page ideas-page">
       <header className="page-header">
         <div>
           <h1>Ideas</h1>
-          <p className="page-subtitle">Brain dump — capture thoughts without pressure</p>
+          <p className="page-subtitle">Your collection of thoughts and inspirations</p>
         </div>
+        <button className="btn-primary" onClick={handleCreateNew}>
+          + New Idea
+        </button>
       </header>
 
-      <div className="ideas-container">
-        <div className="idea-input-card">
-          <h3>💭 What's on your mind?</h3>
-          <textarea
-            className="idea-textarea"
-            placeholder="Write freely... no structure required. Just let your thoughts flow."
-            rows={6}
-            value={newIdeaText}
-            onChange={(e) => setNewIdeaText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.ctrlKey) {
-                handleSaveIdea();
-              }
-            }}
-          />
-          <div className="idea-input-actions">
-            <span className="hint-text">Tip: Press Ctrl+Enter to save quickly</span>
-            <button 
-              className="btn-primary" 
-              onClick={handleSaveIdea}
-              disabled={!newIdeaText.trim()}
-            >
-              Save Idea
-            </button>
-          </div>
-        </div>
-
-        {activeIdeas.length > 0 ? (
-          <div className="ideas-list">
-            <h2 className="section-title">Your Ideas ({activeIdeas.length})</h2>
-            <div className="ideas-feed">
-              {activeIdeas.map((idea) => (
-                <div key={idea.id} className="idea-card">
-                  {editingId === idea.id ? (
-                    <div className="idea-edit-mode">
-                      <textarea
-                        className="idea-edit-textarea"
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        rows={4}
-                        autoFocus
-                      />
-                      <div className="edit-actions">
-                        <button className="btn-secondary" onClick={handleCancelEdit}>
-                          Cancel
-                        </button>
-                        <button className="btn-primary" onClick={handleSaveEdit}>
-                          Save
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="idea-content">
-                        <p className="idea-text">{idea.text}</p>
-                        <div className="idea-meta">
-                          <span className="idea-date">{formatDate(idea.createdAt)}</span>
-                        </div>
-                      </div>
-                      <div className="idea-actions">
-                        <button 
-                          className="icon-btn" 
-                          title="Edit"
-                          onClick={() => handleStartEdit(idea.id, idea.text)}
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          className="icon-btn convert-btn" 
-                          title="Convert to Task"
-                          onClick={() => setConvertingIdeaId(idea.id)}
-                        >
-                          → Task
-                        </button>
-                        <button 
-                          className="icon-btn delete-btn" 
-                          title="Delete"
-                          onClick={() => deleteIdea(idea.id)}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-icon">💡</div>
-            <h3>No ideas yet</h3>
-            <p>Start capturing your thoughts — they don't need to be perfect</p>
-          </div>
-        )}
+      <div className="ideas-toolbar">
+        <input
+          type="text"
+          placeholder="Search ideas..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
       </div>
 
-      {convertingIdeaId && (
-        <ConvertIdeaModal
-          ideaId={convertingIdeaId}
-          onClose={() => setConvertingIdeaId(null)}
-        />
+      {filteredIdeas.length > 0 ? (
+        <div className="sticky-notes-grid">
+          {filteredIdeas.map((idea) => (
+            <div
+              key={idea.id}
+              className="sticky-note"
+              style={{ background: idea.color || '#fef3c7' }}
+              onClick={() => handleOpenIdea(idea.id)}
+            >
+              <div className="sticky-note-header">
+                <h3 className="sticky-note-title">{idea.title}</h3>
+                <button
+                  onClick={(e) => handleDeleteIdea(e, idea.id, idea.title)}
+                  className="btn-delete-sticky"
+                  title="Delete"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="sticky-note-content">
+                <p>{getPreviewText(idea)}</p>
+              </div>
+              <div className="sticky-note-footer">
+                <div className="note-badges">
+                  {idea.notes.map(n => (
+                    <span key={n.id} className={`note-type-icon ${n.type}`}>
+                      {n.type === 'text' ? '📝' : n.type === 'image' ? '🖼️' : '🎨'}
+                    </span>
+                  ))}
+                </div>
+                <span className="sticky-note-date">
+                  {new Date(idea.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon">💡</div>
+          <h3>No ideas yet</h3>
+          <p>Start creating sticky notes with your thoughts, images, and sketches!</p>
+          <button className="btn-primary" onClick={handleCreateNew}>
+            Create Your First Idea
+          </button>
+        </div>
       )}
     </div>
   );

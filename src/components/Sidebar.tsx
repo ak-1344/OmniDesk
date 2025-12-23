@@ -1,19 +1,8 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const location = useLocation();
-  const [isLocked, setIsLocked] = useState(() => {
-    const saved = localStorage.getItem('sidebar-locked');
-    return saved === 'true';
-  });
-
-  const toggleLock = () => {
-    const newLockState = !isLocked;
-    setIsLocked(newLockState);
-    localStorage.setItem('sidebar-locked', newLockState.toString());
-  };
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
@@ -22,22 +11,14 @@ const Sidebar = () => {
     { path: '/ideas', label: 'Ideas', icon: '💡' },
     { path: '/calendar', label: 'Calendar', icon: '📅' },
     { path: '/terminal', label: 'Terminal', icon: '⌨️' },
-    { path: '/portfolio', label: 'Portfolio', icon: '💼' },
     { path: '/trash', label: 'Trash', icon: '🗑️' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 
   return (
-    <aside className={`sidebar ${isLocked ? 'locked' : ''}`}>
+    <aside className="sidebar">
       <div className="sidebar-header">
         <h1 className="sidebar-title">OmniDesk</h1>
-        <button 
-          className="lock-button" 
-          onClick={toggleLock}
-          title={isLocked ? 'Unlock sidebar' : 'Lock sidebar'}
-        >
-          {isLocked ? '📌' : '📍'}
-        </button>
       </div>
       <nav className="sidebar-nav">
         {navItems.map((item) => (

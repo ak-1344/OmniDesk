@@ -6,19 +6,42 @@
 
 **Location**: `src/components/Sidebar.tsx`
 
-The main navigation component with glassmorphism styling.
+The main navigation component with glassmorphism styling and lock/unlock functionality.
 
 **Props**: None (uses React Router for navigation)
 
 **Features**:
 - Responsive navigation menu
+- Lock/unlock sidebar for persistent visibility
+- Auto-collapse when unlocked (hover to expand)
 - Active route highlighting
 - Gradient logo
-- Smooth hover transitions
+- Smooth hover and transition animations
+- LocalStorage persistence for lock state
 
 **Usage**:
 ```tsx
 <Sidebar />
+```
+
+### FloatingTrash
+
+**Location**: `src/components/FloatingTrash.tsx`
+
+A floating trash can component that accepts drag-and-drop for task deletion.
+
+**Props**: None (uses AppContext for task operations)
+
+**Features**:
+- Fixed position in bottom-right corner
+- Drag-and-drop target for tasks
+- Visual feedback animations (pulse, wiggle, shake)
+- "Drop to delete" hint on drag-over
+- Instant task deletion with confirmation animation
+
+**Usage**:
+```tsx
+<FloatingTrash />
 ```
 
 ### CreateTaskModal
@@ -127,15 +150,20 @@ Domain-based task view with grouping.
 
 **Location**: `src/pages/TaskDetail.tsx`
 
-Detailed view of a single task with subtask management.
+Detailed view of a single task with enhanced subtask management.
 
 **Features**:
 - Edit task title, description, state
-- Add/edit/delete subtasks
-- Set deadlines
+- Kanban-style subtask board with drag-and-drop
+- Add/edit/delete subtasks with:
+  - Title
+  - Description
+  - Deadline
+  - State tracking
 - Add notes
 - Upload proof
 - Delete task (moves to trash)
+- Custom column management
 
 **URL Parameters**:
 ```
@@ -146,19 +174,22 @@ Detailed view of a single task with subtask management.
 
 **Location**: `src/pages/Ideas.tsx`
 
-Idea capture and management interface.
+Notion-inspired minimalist idea capture and management interface.
 
 **Features**:
-- Quick idea input
-- Tag support
+- Clean, distraction-free input area
+- Minimal UI with hover-only actions
+- Quick idea capture with Ctrl+Enter
 - Convert to task
 - Delete (moves to trash)
-- Search/filter
+- Timestamp tracking
+- No forced structure or organization
 
 **State**:
 ```typescript
 const [newIdeaText, setNewIdeaText] = useState('');
-const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
+const [convertingIdeaId, setConvertingIdeaId] = useState<string | null>(null);
+const [editingId, setEditingId] = useState<string | null>(null);
 ```
 
 ### AllTasks
@@ -175,6 +206,25 @@ Unified view of all tasks across all domains.
 - Bulk operations (coming soon)
 
 ### Calendar
+
+**Location**: `src/pages/Calendar.tsx`
+
+Dynamic calendar view showing current month with event management.
+
+**Features**:
+- Displays current month (December 2025)
+- Month/year navigation
+- Today highlighting
+- Task deadlines display
+- Scheduled subtasks
+- Personal events
+- Event creation and editing
+- First day of week calculation
+
+**State**:
+```typescript
+const [currentDate, setCurrentDate] = useState(new Date());
+```
 
 **Location**: `src/pages/Calendar.tsx`
 

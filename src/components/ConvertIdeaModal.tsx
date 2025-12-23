@@ -43,7 +43,10 @@ const ConvertIdeaModal = ({ ideaId, onClose }: ConvertIdeaModalProps) => {
         <div className="modal-body">
           <div className="idea-preview">
             <label>Your Idea</label>
-            <p>{idea.text}</p>
+            <p>{idea.title}</p>
+            {idea.notes.length > 0 && idea.notes[0].type === 'text' && (
+              <p className="idea-content">{idea.notes[0].content.substring(0, 200)}...</p>
+            )}
           </div>
 
           <div className="form-group">
