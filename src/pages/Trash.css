@@ -2,53 +2,8 @@
   padding: 2rem;
 }
 
-.btn-danger {
-  background: #e53e3e;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-danger:hover {
-  background: #c53030;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(229, 62, 62, 0.3);
-}
-
-.btn-danger-outline {
-  background: white;
-  color: #e53e3e;
-  border: 2px solid #e53e3e;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-danger-outline:hover {
-  background: #fff5f5;
-}
-
 .trash-container {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.trash-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  max-width: 1000px;
 }
 
 .trash-items {
@@ -62,96 +17,114 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  transition: all 0.2s;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .trash-item:hover {
-  border-color: #999;
-  background: #fafafa;
-}
-
-.item-checkbox {
-  cursor: pointer;
-  width: 18px;
-  height: 18px;
+  border-color: var(--border-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .item-icon {
   font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  border-radius: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .item-details {
   flex: 1;
+  min-width: 0;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .item-title {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   font-size: 1rem;
-  color: #1a1a1a;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.item-type-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .item-meta {
   display: flex;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #999;
-}
-
-.item-type {
-  text-transform: capitalize;
-  color: #666;
+  color: var(--text-tertiary);
 }
 
 .item-actions {
   display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .btn-restore {
-  background: #48bb78;
+  background: var(--success);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-restore:hover {
-  background: #38a169;
+  filter: brightness(1.1);
 }
 
 .btn-delete-permanent {
   background: transparent;
-  color: #e53e3e;
-  border: 1px solid #e53e3e;
+  color: var(--error);
+  border: 1px solid var(--error);
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-delete-permanent:hover {
-  background: #fff5f5;
+  background: rgba(245, 101, 101, 0.1);
 }
 
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
 }
 
 .empty-icon {
@@ -162,10 +135,10 @@
 
 .empty-state h3 {
   margin: 0 0 0.5rem 0;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .empty-state p {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary);
 }
