@@ -379,7 +379,7 @@ export class SupabaseAdapter implements IDataStorage {
     };
   }
 
-  async updateSubtask(taskId: string, subtaskId: string, updates: Partial<Subtask>): Promise<Subtask> {
+  async updateSubtask(_taskId: string, subtaskId: string, updates: Partial<Subtask>): Promise<Subtask> {
     const updateData: any = {};
     
     if (updates.title !== undefined) updateData.title = updates.title;
@@ -419,7 +419,7 @@ export class SupabaseAdapter implements IDataStorage {
     };
   }
 
-  async deleteSubtask(taskId: string, subtaskId: string): Promise<void> {
+  async deleteSubtask(_taskId: string, subtaskId: string): Promise<void> {
     const { error } = await supabase
       .from('subtasks')
       .delete()
@@ -886,24 +886,25 @@ export class SupabaseAdapter implements IDataStorage {
 
     const { data, error } = await supabase
       .from('user_settings')
-      .upsert({ user_id: userId, ...updateData })
-      .eq('user_id', userId)
+      .upsert({ user_id: userId, ...updateData }, {
+        onConflict: 'user_id'
+      })
       .select()
       .single();
 
     if (error) throw error;
 
     return {
-      theme: data.theme,
-      defaultView: data.default_view,
-      dateFormat: data.date_format,
-      weekStartsOn: data.week_starts_on,
+      theme: data!.theme,
+      defaultView: data!.default_view,
+      dateFormat: data!.date_format,
+      weekStartsOn: data!.week_starts_on,
       notifications: {
-        email: data.notifications_email,
-        desktop: data.notifications_desktop,
-        taskReminders: data.notifications_task_reminders,
+        email: data!.notifications_email,
+        desktop: data!.notifications_desktop,
+        taskReminders: data!.notifications_task_reminders,
       },
-      trashRetentionDays: data.trash_retention_days,
+      trashRetentionDays: data!.trash_retention_days,
     };
   }
 
@@ -981,19 +982,21 @@ export class SupabaseAdapter implements IDataStorage {
     );
   }
 
-  async addToTrash(item: Omit<TrashItem, 'id'>): Promise<TrashItem> {
+  async addToTrash(_item: Omit<TrashItem, 'id'>): Promise<TrashItem> {
     // Handled by soft delete in deleteTask/deleteIdea
     throw new Error('Use deleteTask() or deleteIdea() instead');
   }
 
   async restoreFromTrash(id: string): Promise<void> {
     // Try to restore as task
-    const { error: taskError } = await supabase
+    const { data: taskData } = await supabase
       .from('tasks')
       .update({ deleted_at: null })
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (!taskError) return;
+    if (taskData) return;
 
     // Try to restore as idea
     const { error: ideaError } = await supabase
