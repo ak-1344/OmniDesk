@@ -18,13 +18,15 @@ const Trash = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getItemPreview = (item: typeof trash[0]) => {
+  const getItemPreview = (item: { type: string; item: Task | Idea }) => {
+    if (!item || !item.item) return 'Unknown item';
+    
     if (item.type === 'task') {
       const task = item.item as Task;
-      return task.title;
+      return task.title || 'Untitled task';
     } else if (item.type === 'idea') {
       const idea = item.item as Idea;
-      const textNote = idea.notes.find(n => n.type === 'text');
+      const textNote = idea.notes?.find(n => n.type === 'text');
       const text = textNote ? textNote.content : idea.title || 'Untitled idea';
       return text.substring(0, 100) + (text.length > 100 ? '...' : '');
     }
