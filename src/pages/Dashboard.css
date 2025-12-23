@@ -174,6 +174,12 @@
   min-width: 200px;
 }
 
+.filter-select option {
+  background: rgba(20, 20, 30, 0.95);
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
 .filter-select:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--accent-primary);
@@ -409,15 +415,16 @@
 
 /* Column Header */
 .column-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   position: relative;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 2px solid;
+  background: transparent;
 }
 
 .column-header::before {
@@ -425,49 +432,46 @@
   position: absolute;
   inset: 0;
   background: inherit;
-  opacity: 0.15;
+  opacity: 0.08;
   border-radius: inherit;
 }
 
 .column-info {
   display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
+  align-items: center;
+  gap: 0.75rem;
   position: relative;
   z-index: 1;
 }
 
 .column-icon {
-  font-size: 1.75rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  font-size: 1.35rem;
+  opacity: 0.9;
 }
 
 .column-title {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .column-description {
-  margin: 0.25rem 0 0;
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
-  font-weight: 500;
+  display: none;
 }
 
 .column-count {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  padding: 0.375rem 0.875rem;
-  border-radius: var(--radius-full);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
   position: relative;
   z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 24px;
+  text-align: center;
 }
 
 /* Kanban Cards Container */

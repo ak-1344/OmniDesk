@@ -49,6 +49,12 @@
   min-width: 150px;
 }
 
+.filter-select option {
+  background: rgba(20, 20, 30, 0.95);
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
 .filter-select:focus {
   outline: none;
   border-color: var(--accent-primary);
