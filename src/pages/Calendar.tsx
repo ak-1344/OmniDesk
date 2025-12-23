@@ -279,7 +279,7 @@ const Calendar = () => {
                   <h4>Add New Item</h4>
                   <select 
                     value={newItemType}
-                    onChange={(e) => setNewItemType(e.target.value as any)}
+                    onChange={(e) => setNewItemType(e.target.value as 'event' | 'task')}
                     className="item-type-select"
                   >
                     <option value="event">Event</option>
