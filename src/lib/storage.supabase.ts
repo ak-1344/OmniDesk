@@ -252,7 +252,7 @@ export class SupabaseAdapter implements IDataStorage {
   }
 
   async updateTask(id: string, updates: Partial<Task>): Promise<Task> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
@@ -380,7 +380,7 @@ export class SupabaseAdapter implements IDataStorage {
   }
 
   async updateSubtask(_taskId: string, subtaskId: string, updates: Partial<Subtask>): Promise<Subtask> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description || null;
@@ -575,7 +575,7 @@ export class SupabaseAdapter implements IDataStorage {
   }
 
   async updateIdea(id: string, updates: Partial<Idea>): Promise<Idea> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.color !== undefined) updateData.color = updates.color || null;
@@ -698,7 +698,7 @@ export class SupabaseAdapter implements IDataStorage {
   }
 
   async updateIdeaFolder(id: string, updates: Partial<IdeaFolder>): Promise<IdeaFolder> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.color !== undefined) updateData.color = updates.color || null;
@@ -787,7 +787,7 @@ export class SupabaseAdapter implements IDataStorage {
   }
 
   async updateCalendarEvent(id: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description || null;
@@ -873,7 +873,7 @@ export class SupabaseAdapter implements IDataStorage {
 
   async updateSettings(updates: Partial<AppSettings>): Promise<AppSettings> {
     const userId = this.ensureUserId();
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.theme !== undefined) updateData.theme = updates.theme;
     if (updates.defaultView !== undefined) updateData.default_view = updates.defaultView;
@@ -982,8 +982,8 @@ export class SupabaseAdapter implements IDataStorage {
     );
   }
 
-  async addToTrash(_item: Omit<TrashItem, 'id'>): Promise<TrashItem> {
-    // Handled by soft delete in deleteTask/deleteIdea
+  // This method is not used for Supabase (soft deletes handled directly)
+  async addToTrash(): Promise<TrashItem> {
     throw new Error('Use deleteTask() or deleteIdea() instead');
   }
 
@@ -1009,7 +1009,7 @@ export class SupabaseAdapter implements IDataStorage {
 
   async permanentlyDelete(id: string): Promise<void> {
     // Try to delete as task
-    let { error: taskError } = await supabase
+    const { error: taskError } = await supabase
       .from('tasks')
       .delete()
       .eq('id', id);
