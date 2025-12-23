@@ -1,11 +1,33 @@
+import { useApp } from '../context/AppContext';
+import type { Task, Idea } from '../types';
 import './Trash.css';
 
 const Trash = () => {
-  const trashedItems = [
-    { id: 1, title: 'Old marketing campaign', type: 'task', deletedDate: '2024-01-08', deletedBy: 'You' },
-    { id: 2, title: 'Outdated feature idea', type: 'idea', deletedDate: '2024-01-07', deletedBy: 'You' },
-    { id: 3, title: 'Cancelled project plan', type: 'task', deletedDate: '2024-01-05', deletedBy: 'You' },
-  ];
+  const { trash, restoreFromTrash, permanentlyDelete, emptyTrash } = useApp();
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getItemPreview = (item: typeof trash[0]) => {
+    if (item.type === 'task') {
+      const task = item.item as Task;
+      return task.title;
+    } else if (item.type === 'idea') {
+      const idea = item.item as Idea;
+      return idea.text.substring(0, 100) + (idea.text.length > 100 ? '...' : '');
+    }
+    return 'Unknown item';
+  };
 
   return (
     <div className="page trash-page">
@@ -14,37 +36,45 @@ const Trash = () => {
           <h1>Trash</h1>
           <p className="page-subtitle">Deleted items are kept for 30 days</p>
         </div>
-        <button className="btn-danger">Empty Trash</button>
+        {trash.length > 0 && (
+          <button className="btn-danger" onClick={emptyTrash}>
+            Empty Trash
+          </button>
+        )}
       </header>
 
-      {trashedItems.length > 0 ? (
+      {trash.length > 0 ? (
         <div className="trash-container">
-          <div className="trash-actions">
-            <button className="btn-secondary">Select All</button>
-            <button className="btn-secondary">Restore Selected</button>
-            <button className="btn-danger-outline">Delete Selected</button>
-          </div>
-
           <div className="trash-items">
-            {trashedItems.map((item) => (
+            {trash.map((item) => (
               <div key={item.id} className="trash-item">
-                <input type="checkbox" className="item-checkbox" />
                 <div className="item-icon">
-                  {item.type === 'task' ? '✓' : '💡'}
+                  {item.type === 'task' ? '✓' : item.type === 'idea' ? '💡' : '📝'}
                 </div>
                 <div className="item-details">
-                  <h3 className="item-title">{item.title}</h3>
+                  <div className="item-header">
+                    <h3 className="item-title">{getItemPreview(item)}</h3>
+                    <span className="item-type-badge">{item.type}</span>
+                  </div>
                   <div className="item-meta">
-                    <span className="item-type">{item.type}</span>
-                    <span>•</span>
-                    <span>Deleted {item.deletedDate}</span>
+                    <span>Deleted {formatDate(item.deletedAt)}</span>
                     <span>•</span>
                     <span>By {item.deletedBy}</span>
                   </div>
                 </div>
                 <div className="item-actions">
-                  <button className="btn-restore">Restore</button>
-                  <button className="btn-delete-permanent">Delete Permanently</button>
+                  <button 
+                    className="btn-restore" 
+                    onClick={() => restoreFromTrash(item.id)}
+                  >
+                    Restore
+                  </button>
+                  <button 
+                    className="btn-delete-permanent" 
+                    onClick={() => permanentlyDelete(item.id)}
+                  >
+                    Delete Forever
+                  </button>
                 </div>
               </div>
             ))}
@@ -54,7 +84,7 @@ const Trash = () => {
         <div className="empty-state">
           <div className="empty-icon">🗑️</div>
           <h3>Trash is empty</h3>
-          <p>Deleted items will appear here</p>
+          <p>Deleted items will appear here and be kept for 30 days</p>
         </div>
       )}
     </div>
