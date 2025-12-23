@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext';
+import type { Task, Idea } from '../types';
 import './Trash.css';
 
 const Trash = () => {
@@ -19,10 +20,10 @@ const Trash = () => {
 
   const getItemPreview = (item: typeof trash[0]) => {
     if (item.type === 'task') {
-      const task = item.item as any;
+      const task = item.item as Task;
       return task.title;
     } else if (item.type === 'idea') {
-      const idea = item.item as any;
+      const idea = item.item as Idea;
       return idea.text.substring(0, 100) + (idea.text.length > 100 ? '...' : '');
     }
     return 'Unknown item';
