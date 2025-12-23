@@ -1,50 +1,62 @@
 .all-tasks-page {
-  padding: 2rem;
+  padding: 2.5rem;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .header-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .search-input {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  padding: 0.875rem 1.25rem;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
   font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  min-width: 200px;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .filter-select {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  padding: 0.875rem 1.25rem;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
   font-size: 0.95rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
   cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--accent-primary);
 }
 
 .table-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
   overflow-x: auto;
+  box-shadow: var(--shadow-md);
 }
 
 .tasks-table {
@@ -53,36 +65,37 @@
 }
 
 .tasks-table thead {
-  background: #f9f9f9;
-  border-bottom: 2px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 2px solid var(--glass-border);
 }
 
 .tasks-table th {
-  padding: 1rem;
+  padding: 1.25rem;
   text-align: left;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: var(--text-primary);
   font-size: 0.875rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .tasks-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--text-secondary);
 }
 
 .tasks-table tbody tr {
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .tasks-table tbody tr:hover {
-  background-color: #f8f9ff;
+  background: rgba(102, 126, 234, 0.08);
 }
 
 .task-title-cell {
-  font-weight: 500;
-  color: #1a1a1a;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .priority-badge {
