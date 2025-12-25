@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Sidebar from './components/Sidebar';
 import FloatingTrash from './components/FloatingTrash';
+import { ConnectionStatus } from './components/ConnectionStatus';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
@@ -35,6 +36,7 @@ function App() {
             </Routes>
           </main>
           <FloatingTrash />
+          <ConnectionStatus />
         </div>
       </Router>
     </AppProvider>
