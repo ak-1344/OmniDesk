@@ -68,3 +68,80 @@
   line-height: 1.6;
 }
 
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    left: -250px;
+    transition: left 0.3s ease;
+    z-index: 2000;
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  .page {
+    padding: 1rem;
+  }
+
+  /* Mobile-friendly buttons */
+  button, .btn-primary, .btn-secondary {
+    min-height: 44px;
+    padding: 0.75rem 1.25rem;
+  }
+
+  /* Mobile-friendly form inputs */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Stack elements vertically on mobile */
+  .flex-row {
+    flex-direction: column;
+  }
+
+  /* Full-width cards on mobile */
+  .card, .sticky-note, .task-card {
+    width: 100% !important;
+    margin: 0 0 1rem 0;
+  }
+
+  /* Mobile-optimized modals */
+  .modal-content {
+    width: 95%;
+    max-width: 95vw;
+    margin: 0.5rem;
+  }
+}
