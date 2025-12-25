@@ -456,3 +456,19 @@
   background: rgba(102, 126, 234, 0.1);
   border-radius: var(--radius-sm);
 }
+
+.lineage-task-missing {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lineage-task-missing .lineage-task-title {
+  font-style: italic;
+  color: var(--text-tertiary);
+}
+
+.lineage-task-missing .lineage-task-state {
+  background: rgba(245, 101, 101, 0.1);
+  color: var(--error);
+}
