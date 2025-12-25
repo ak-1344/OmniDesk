@@ -5,7 +5,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const ConnectionStatus = () => {
   const [status, setStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
-  const [backend, setBackend] = useState<string>('');
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -14,14 +13,11 @@ export const ConnectionStatus = () => {
         const response = await fetch(healthUrl);
         if (response.ok) {
           setStatus('connected');
-          setBackend(import.meta.env.VITE_STORAGE_BACKEND || 'localstorage');
         } else {
           setStatus('disconnected');
-          setBackend('localstorage (fallback)');
         }
       } catch (error) {
         setStatus('disconnected');
-        setBackend('localstorage (fallback)');
       }
     };
 
