@@ -185,6 +185,40 @@ const IdeaDetail = () => {
           </div>
         </div>
 
+        {!isNew && idea && idea.convertedToTasks && idea.convertedToTasks.length > 0 && (
+          <div className="task-lineage-section">
+            <h3 className="lineage-title">📋 Tasks Created from This Idea</h3>
+            <div className="lineage-tasks">
+              {idea.convertedToTasks.map(taskId => {
+                const task = state.tasks.find(t => t.id === taskId);
+                if (!task) return null;
+                const taskDomain = state.domains.find(d => d.id === task.domainId);
+                return (
+                  <Link
+                    key={taskId}
+                    to={`/tasks/${taskId}`}
+                    className="lineage-task-card"
+                  >
+                    <div className="lineage-task-header">
+                      <span className="lineage-task-title">{task.title}</span>
+                      <span 
+                        className="lineage-task-domain"
+                        style={{ 
+                          background: taskDomain ? `${taskDomain.color}25` : 'rgba(255,255,255,0.05)',
+                          color: taskDomain?.color || 'var(--text-secondary)',
+                        }}
+                      >
+                        {taskDomain?.name || 'No Domain'}
+                      </span>
+                    </div>
+                    <div className="lineage-task-state">{task.state.replace('-', ' ')}</div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {canvasEnabled ? (
           <div className="canvas-mode">
             <div className="canvas-info">

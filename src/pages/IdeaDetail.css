@@ -381,3 +381,78 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Task Lineage Section */
+.task-lineage-section {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  margin-bottom: 2rem;
+}
+
+.lineage-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lineage-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lineage-task-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.lineage-task-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+  border-color: var(--accent-primary);
+}
+
+.lineage-task-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.lineage-task-title {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.lineage-task-domain {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lineage-task-state {
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  padding: 0.25rem 0.625rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: var(--radius-sm);
+}
