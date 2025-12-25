@@ -50,7 +50,7 @@ interface AppContextType {
   deleteDomain: (id: string) => Promise<void>;
   
   // Task operations
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => Promise<Task>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   getTask: (id: string) => Task | undefined;
@@ -231,8 +231,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Task operations
   const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => {
     if (!storage) throw new Error('Storage not initialized');
-    await storage.addTask(task);
+    const newTask = await storage.addTask(task);
     await refreshTasks();
+    return newTask;
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
@@ -295,12 +296,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const idea = await storage?.getIdea(ideaId);
     if (idea) {
       const textContent = idea.notes.find(n => n.type === 'text')?.content || '';
-      await addTask({
+      
+      // Create task with idea lineage
+      const newTask = await addTask({
         title: idea.title || textContent.substring(0, 50),
         description: textContent,
         domainId,
         state,
+        ideaId, // Link task back to idea
       });
+      
+      // Update idea with task reference (bidirectional linking)
+      const taskId = newTask?.id;
+      if (taskId && storage) {
+        const convertedTasks = idea.convertedToTasks || [];
+        await storage.updateIdea(ideaId, {
+          convertedToTasks: [...convertedTasks, taskId]
+        });
+        await refreshIdeas();
+      }
     }
   };
 

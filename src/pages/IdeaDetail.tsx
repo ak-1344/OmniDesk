@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { InfiniteCanvas } from '../components/Canvas/InfiniteCanvas';
+import ConvertIdeaModal from '../components/ConvertIdeaModal';
 import type { NoteContent, NoteContentType } from '../types';
 import './IdeaDetail.css';
 
@@ -19,6 +20,7 @@ const IdeaDetail = () => {
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [canvasEnabled, setCanvasEnabled] = useState(idea?.canvasEnabled || false);
   const [canvasData, setCanvasData] = useState<any>(idea?.canvasData);
+  const [showConvertModal, setShowConvertModal] = useState(false);
 
   const colors = [
     { name: 'Yellow', value: '#fef3c7' },
@@ -138,9 +140,18 @@ const IdeaDetail = () => {
             {canvasEnabled ? '🎨 Canvas Enabled' : '📝 Enable Canvas'}
           </button>
           {!isNew && (
-            <button onClick={handleDelete} className="btn-delete-idea">
-              🗑️ Delete
-            </button>
+            <>
+              <button 
+                onClick={() => setShowConvertModal(true)} 
+                className="btn-convert"
+                title="Convert this idea to a task"
+              >
+                ✓ Convert to Task
+              </button>
+              <button onClick={handleDelete} className="btn-delete-idea">
+                🗑️ Delete
+              </button>
+            </>
           )}
           <button onClick={handleSave} className="btn-primary">
             💾 Save Idea
@@ -275,6 +286,13 @@ const IdeaDetail = () => {
           </>
         )}
       </div>
+      
+      {showConvertModal && idea && (
+        <ConvertIdeaModal
+          ideaId={idea.id}
+          onClose={() => setShowConvertModal(false)}
+        />
+      )}
     </div>
   );
 };
