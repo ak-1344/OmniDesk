@@ -23,6 +23,9 @@ router.get('/', async (req: Request, res: Response) => {
       folderId: i.folder_id,
       tags: i.tags,
       position: i.position,
+      canvasEnabled: i.canvas_enabled || false,
+      canvasData: i.canvas_data || null,
+      convertedToTasks: i.converted_to_tasks || [],
       notes: (i.notes || []).map((n: any) => ({
         id: n._id,
         type: n.type,
@@ -42,7 +45,7 @@ router.get('/', async (req: Request, res: Response) => {
 // Create a new idea
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { title, color, folderId, tags, position, notes, user_id } = req.body;
+    const { title, color, folderId, tags, position, notes, canvasEnabled, canvasData, user_id } = req.body;
     const db = getDatabase();
     
     const result = await db.collection('ideas').insertOne({
@@ -52,6 +55,9 @@ router.post('/', async (req: Request, res: Response) => {
       color: color || null,
       tags: tags || [],
       position: position || null,
+      canvas_enabled: canvasEnabled || false,
+      canvas_data: canvasData || null,
+      converted_to_tasks: [],
       notes: (notes || []).map((n: any, idx: number) => ({
         _id: new ObjectId().toString(),
         type: n.type || 'text',
@@ -70,6 +76,9 @@ router.post('/', async (req: Request, res: Response) => {
       folderId,
       tags,
       position,
+      canvasEnabled,
+      canvasData,
+      convertedToTasks: [],
       notes,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -84,7 +93,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, color, folderId, tags, position, notes } = req.body;
+    const { title, color, folderId, tags, position, notes, canvasEnabled, canvasData, convertedToTasks } = req.body;
     const db = getDatabase();
     
     const updateDoc: any = { updated_at: new Date() };
@@ -93,6 +102,9 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (folderId !== undefined) updateDoc.folder_id = folderId;
     if (tags !== undefined) updateDoc.tags = tags;
     if (position !== undefined) updateDoc.position = position;
+    if (canvasEnabled !== undefined) updateDoc.canvas_enabled = canvasEnabled;
+    if (canvasData !== undefined) updateDoc.canvas_data = canvasData;
+    if (convertedToTasks !== undefined) updateDoc.converted_to_tasks = convertedToTasks;
     if (notes !== undefined) {
       updateDoc.notes = notes.map((n: any, idx: number) => ({
         _id: n.id || new ObjectId().toString(),
@@ -120,6 +132,9 @@ router.put('/:id', async (req: Request, res: Response) => {
       folderId: result.folder_id,
       tags: result.tags,
       position: result.position,
+      canvasEnabled: result.canvas_enabled,
+      canvasData: result.canvas_data,
+      convertedToTasks: result.converted_to_tasks,
       notes: result.notes,
       createdAt: result.created_at,
       updatedAt: result.updated_at

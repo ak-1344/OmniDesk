@@ -58,18 +58,37 @@
 .terminal-body {
   padding: 1.5rem;
   min-height: 500px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
   font-size: 0.9rem;
 }
 
 .terminal-output {
+  flex: 1;
+  overflow-y: auto;
   margin-bottom: 1rem;
+  padding-right: 0.5rem;
 }
 
 .output-line {
   color: #d4d4d4;
   line-height: 1.6;
   margin-bottom: 0.25rem;
+}
+
+.output-line.command {
+  color: #4ec9b0;
+  font-weight: 600;
+}
+
+.output-line.error {
+  color: #f48771;
+}
+
+.output-line.success {
+  color: #89d185;
 }
 
 .output-line:empty {
