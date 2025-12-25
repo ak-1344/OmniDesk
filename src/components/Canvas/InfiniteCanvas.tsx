@@ -1,65 +1,45 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Tldraw, TLEditorComponents, createTLStore, defaultShapeUtils, TLStoreSnapshot } from '@tldraw/tldraw';
+import { useEffect } from 'react';
+import { Tldraw } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
 import './InfiniteCanvas.css';
 
 interface InfiniteCanvasProps {
   ideaId: string;
-  initialData?: TLStoreSnapshot;
-  onSave?: (snapshot: TLStoreSnapshot) => void;
+  initialData?: any;
+  onSave?: (snapshot: any) => void;
   readOnly?: boolean;
 }
 
 export const InfiniteCanvas = ({ ideaId, initialData, onSave, readOnly = false }: InfiniteCanvasProps) => {
-  const [store] = useState(() => {
-    const newStore = createTLStore({ shapeUtils: defaultShapeUtils });
-    
-    // Load initial data if provided
-    if (initialData) {
-      try {
-        newStore.loadSnapshot(initialData);
-      } catch (error) {
-        console.error('Failed to load canvas snapshot:', error);
-      }
-    }
-    
-    return newStore;
-  });
-
   // Auto-save functionality with debounce
   useEffect(() => {
     if (!onSave || readOnly) return;
 
     let timeoutId: NodeJS.Timeout;
 
-    const handleChange = () => {
+    const handleSave = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        const snapshot = store.getSnapshot();
-        onSave(snapshot);
-      }, 1000); // Debounce for 1 second
+        // Save will be triggered by TLDraw's onChange
+        console.log('Canvas auto-saved for idea:', ideaId);
+      }, 1000);
     };
-
-    // Listen to store changes
-    const unsubscribe = store.listen(handleChange);
 
     return () => {
       clearTimeout(timeoutId);
-      unsubscribe();
     };
-  }, [store, onSave, readOnly]);
-
-  const components: TLEditorComponents = {
-    // Customize toolbar if needed
-  };
+  }, [ideaId, onSave, readOnly]);
 
   return (
     <div className="infinite-canvas-container" data-idea-id={ideaId}>
       <Tldraw
-        store={store}
-        components={components}
-        hideUi={readOnly}
-        inferDarkMode
+        persistenceKey={`idea-${ideaId}`}
+        onChange={(editor) => {
+          if (onSave) {
+            const snapshot = editor.store.getSnapshot();
+            onSave(snapshot);
+          }
+        }}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Ideas from './pages/Ideas';
 import IdeaCreate from './pages/IdeaCreate';
+import IdeaDetail from './pages/IdeaDetail';
 import AllTasks from './pages/AllTasks';
 import Calendar from './pages/Calendar';
 import Terminal from './pages/Terminal';
@@ -28,6 +29,7 @@ function App() {
               <Route path="/tasks/:id" element={<TaskDetail />} />
               <Route path="/ideas" element={<Ideas />} />
               <Route path="/ideas/new" element={<IdeaCreate />} />
+              <Route path="/ideas/:id" element={<IdeaDetail />} />
               <Route path="/all-tasks" element={<AllTasks />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/terminal" element={<Terminal />} />

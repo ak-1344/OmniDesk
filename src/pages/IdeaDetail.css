@@ -28,6 +28,30 @@
 .header-actions {
   display: flex;
   gap: 1rem;
+  align-items: center;
+}
+
+.btn-toggle-canvas {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--accent-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-canvas:hover {
+  background: rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-toggle-canvas.active {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: var(--accent-secondary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 .btn-delete-idea {
@@ -296,6 +320,43 @@
   padding: 4rem 2rem;
   color: var(--text-tertiary);
   font-size: 1.1rem;
+}
+
+.empty-notes .hint {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: var(--text-quaternary);
+}
+
+/* Canvas Mode Styles */
+.canvas-mode {
+  width: 100%;
+}
+
+.canvas-info {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.canvas-info p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.canvas-wrapper {
+  height: calc(100vh - 350px);
+  min-height: 600px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 768px) {

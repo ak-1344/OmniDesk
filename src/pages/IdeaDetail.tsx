@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { InfiniteCanvas } from '../components/Canvas/InfiniteCanvas';
 import type { NoteContent, NoteContentType } from '../types';
 import './IdeaDetail.css';
 
@@ -16,6 +17,8 @@ const IdeaDetail = () => {
   const [color, setColor] = useState(idea?.color || '#fef3c7');
   const [notes, setNotes] = useState<NoteContent[]>(idea?.notes || []);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const [canvasEnabled, setCanvasEnabled] = useState(idea?.canvasEnabled || false);
+  const [canvasData, setCanvasData] = useState<any>(idea?.canvasData);
 
   const colors = [
     { name: 'Yellow', value: '#fef3c7' },
@@ -55,6 +58,20 @@ const IdeaDetail = () => {
     }
   };
 
+  const handleCanvasSave = (snapshot: any) => {
+    setCanvasData(snapshot);
+  };
+
+  const handleToggleCanvas = () => {
+    const newCanvasEnabled = !canvasEnabled;
+    setCanvasEnabled(newCanvasEnabled);
+    
+    // If enabling canvas for the first time, create initial data
+    if (newCanvasEnabled && !canvasData) {
+      setCanvasData(undefined); // TLDraw will initialize with empty canvas
+    }
+  };
+
   const handleSave = () => {
     if (!title.trim()) {
       alert('Please enter a title');
@@ -66,6 +83,8 @@ const IdeaDetail = () => {
       color,
       notes,
       tags: [],
+      canvasEnabled,
+      canvasData: canvasEnabled ? canvasData : undefined,
     };
 
     if (isNew) {
@@ -111,6 +130,13 @@ const IdeaDetail = () => {
       <header className="idea-detail-header">
         <Link to="/ideas" className="back-link">← Back to Ideas</Link>
         <div className="header-actions">
+          <button 
+            onClick={handleToggleCanvas} 
+            className={`btn-toggle-canvas ${canvasEnabled ? 'active' : ''}`}
+            title={canvasEnabled ? 'Disable infinite canvas' : 'Enable infinite canvas'}
+          >
+            {canvasEnabled ? '🎨 Canvas Enabled' : '📝 Enable Canvas'}
+          </button>
           {!isNew && (
             <button onClick={handleDelete} className="btn-delete-idea">
               🗑️ Delete
@@ -148,89 +174,106 @@ const IdeaDetail = () => {
           </div>
         </div>
 
-        <div className="notes-toolbar">
-          <button onClick={() => handleAddNote('text')} className="btn-add-note">
-            📝 Add Text Note
-          </button>
-          <button onClick={() => handleAddNote('image')} className="btn-add-note">
-            🖼️ Add Image
-          </button>
-          <button onClick={() => handleAddNote('whiteboard')} className="btn-add-note">
-            🎨 Add Whiteboard
-          </button>
-        </div>
-
-        <div className="notes-container">
-          {notes.length === 0 ? (
-            <div className="empty-notes">
-              <p>No notes yet. Add a text note, image, or whiteboard to get started!</p>
+        {canvasEnabled ? (
+          <div className="canvas-mode">
+            <div className="canvas-info">
+              <p>✨ Infinite canvas mode - Sketch, draw, and connect your ideas spatially</p>
             </div>
-          ) : (
-            notes.map((note) => (
-              <div key={note.id} className={`note-card ${note.type}`} style={{ background: color }}>
-                <div className="note-header">
-                  <span className="note-type-badge">{note.type}</span>
-                  <button
-                    onClick={() => handleDeleteNote(note.id)}
-                    className="btn-delete-note"
-                  >
-                    ×
-                  </button>
+            <div className="canvas-wrapper">
+              <InfiniteCanvas
+                ideaId={idea?.id || 'new'}
+                initialData={canvasData}
+                onSave={handleCanvasSave}
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="notes-toolbar">
+              <button onClick={() => handleAddNote('text')} className="btn-add-note">
+                📝 Add Text Note
+              </button>
+              <button onClick={() => handleAddNote('image')} className="btn-add-note">
+                🖼️ Add Image
+              </button>
+              <button onClick={() => handleAddNote('whiteboard')} className="btn-add-note">
+                🎨 Add Whiteboard
+              </button>
+            </div>
+
+            <div className="notes-container">
+              {notes.length === 0 ? (
+                <div className="empty-notes">
+                  <p>No notes yet. Add a text note, image, or whiteboard to get started!</p>
+                  <p className="hint">💡 Or enable the infinite canvas above for a spatial thinking experience</p>
                 </div>
-                
-                <div className="note-content">
-                  {note.type === 'text' && (
-                    <textarea
-                      value={note.content}
-                      onChange={(e) => handleUpdateNote(note.id, e.target.value)}
-                      placeholder="Write your thoughts..."
-                      className="note-textarea"
-                      rows={6}
-                    />
-                  )}
-                  
-                  {note.type === 'image' && (
-                    <div className="image-upload-container">
-                      {note.content ? (
-                        <div className="image-preview">
-                          <img src={note.content} alt="Uploaded" />
-                          <button
-                            onClick={() => handleUpdateNote(note.id, '')}
-                            className="btn-remove-image"
-                          >
-                            Remove Image
-                          </button>
+              ) : (
+                notes.map((note) => (
+                  <div key={note.id} className={`note-card ${note.type}`} style={{ background: color }}>
+                    <div className="note-header">
+                      <span className="note-type-badge">{note.type}</span>
+                      <button
+                        onClick={() => handleDeleteNote(note.id)}
+                        className="btn-delete-note"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    <div className="note-content">
+                      {note.type === 'text' && (
+                        <textarea
+                          value={note.content}
+                          onChange={(e) => handleUpdateNote(note.id, e.target.value)}
+                          placeholder="Write your thoughts..."
+                          className="note-textarea"
+                          rows={6}
+                        />
+                      )}
+                      
+                      {note.type === 'image' && (
+                        <div className="image-upload-container">
+                          {note.content ? (
+                            <div className="image-preview">
+                              <img src={note.content} alt="Uploaded" />
+                              <button
+                                onClick={() => handleUpdateNote(note.id, '')}
+                                className="btn-remove-image"
+                              >
+                                Remove Image
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="image-upload">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(note.id, e)}
+                                id={`image-${note.id}`}
+                                style={{ display: 'none' }}
+                              />
+                              <label htmlFor={`image-${note.id}`} className="upload-label">
+                                📁 Click to upload image
+                              </label>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="image-upload">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(note.id, e)}
-                            id={`image-${note.id}`}
-                            style={{ display: 'none' }}
-                          />
-                          <label htmlFor={`image-${note.id}`} className="upload-label">
-                            📁 Click to upload image
-                          </label>
+                      )}
+                      
+                      {note.type === 'whiteboard' && (
+                        <div className="whiteboard-container">
+                          <div className="whiteboard-placeholder">
+                            💡 Enable the infinite canvas above for a full whiteboard experience
+                          </div>
                         </div>
                       )}
                     </div>
-                  )}
-                  
-                  {note.type === 'whiteboard' && (
-                    <div className="whiteboard-container">
-                      <div className="whiteboard-placeholder">
-                        🎨 Whiteboard feature coming soon!
-                        <p>Sketch and draw your ideas visually</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
