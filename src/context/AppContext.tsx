@@ -294,27 +294,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const convertIdeaToTask = async (ideaId: string, domainId: string, state: TaskState) => {
     const idea = await storage?.getIdea(ideaId);
-    if (idea) {
-      const textContent = idea.notes.find(n => n.type === 'text')?.content || '';
-      
-      // Create task with idea lineage
-      const newTask = await addTask({
-        title: idea.title || textContent.substring(0, 50),
-        description: textContent,
-        domainId,
-        state,
-        ideaId, // Link task back to idea
+    if (!idea || !storage) return;
+    
+    const textContent = idea.notes.find(n => n.type === 'text')?.content || '';
+    
+    // Create task with idea lineage
+    const newTask = await addTask({
+      title: idea.title || textContent.substring(0, 50),
+      description: textContent,
+      domainId,
+      state,
+      ideaId, // Link task back to idea
+    });
+    
+    // Update idea with task reference (bidirectional linking)
+    if (newTask && newTask.id) {
+      const convertedTasks = idea.convertedToTasks || [];
+      await storage.updateIdea(ideaId, {
+        convertedToTasks: [...convertedTasks, newTask.id]
       });
-      
-      // Update idea with task reference (bidirectional linking)
-      const taskId = newTask?.id;
-      if (taskId && storage) {
-        const convertedTasks = idea.convertedToTasks || [];
-        await storage.updateIdea(ideaId, {
-          convertedToTasks: [...convertedTasks, taskId]
-        });
-        await refreshIdeas();
-      }
+      await refreshIdeas();
     }
   };
 

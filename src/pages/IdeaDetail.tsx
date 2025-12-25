@@ -191,7 +191,15 @@ const IdeaDetail = () => {
             <div className="lineage-tasks">
               {idea.convertedToTasks.map(taskId => {
                 const task = state.tasks.find(t => t.id === taskId);
-                if (!task) return null;
+                if (!task) {
+                  console.warn(`Task ${taskId} referenced by idea ${idea.id} not found`);
+                  return (
+                    <div key={taskId} className="lineage-task-card lineage-task-missing">
+                      <span className="lineage-task-title">Task deleted or not found</span>
+                      <span className="lineage-task-state">Missing</span>
+                    </div>
+                  );
+                }
                 const taskDomain = state.domains.find(d => d.id === task.domainId);
                 return (
                   <Link

@@ -162,15 +162,15 @@ const TaskDetail = () => {
         <p className="task-detail-description">{task.description}</p>
         <div className="task-detail-meta">
           {task.ideaId && (
-            <>
-              <Link to={`/ideas/${task.ideaId}`} className="idea-origin-link">
-                💡 Born from Idea
-              </Link>
-              <span>•</span>
-            </>
+            <Link to={`/ideas/${task.ideaId}`} className="idea-origin-link">
+              💡 Born from Idea
+            </Link>
           )}
-          {task.deadline && <span>📅 Due: {new Date(task.deadline).toLocaleDateString()}</span>}
-          {task.deadline && <span>•</span>}
+          {task.ideaId && (task.deadline || totalSubtasks > 0) && <span>•</span>}
+          {task.deadline && (
+            <span>📅 Due: {new Date(task.deadline).toLocaleDateString()}</span>
+          )}
+          {task.deadline && totalSubtasks > 0 && <span>•</span>}
           <span>📋 {totalSubtasks} subtasks ({completedSubtasks} completed)</span>
           <span>•</span>
           <span className="progress-indicator">
