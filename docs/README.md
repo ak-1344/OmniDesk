@@ -10,6 +10,8 @@ Welcome to the OmniDesk documentation! This guide will help you understand the a
 - [API Reference](./api-reference.md)
 - [Styling Guide](./styling-guide.md)
 - [State Management](./state-management.md)
+- [Data Configuration](./data-configuration.md) - **Data structures and storage requirements**
+- [Supabase Setup](./supabase-setup.md) - **Cloud database integration guide**
 
 ## Quick Links
 
@@ -22,11 +24,14 @@ Welcome to the OmniDesk documentation! This guide will help you understand the a
 - [Project Structure](./architecture.md#project-structure)
 - [Component Documentation](./components.md)
 - [Adding New Features](./architecture.md#extending)
+- [Data Configuration](./data-configuration.md)
+- [Supabase Integration](./supabase-setup.md)
+- [Database Schema](./database-schema.sql)
 - [Contributing Guidelines](../CONTRIBUTING.md)
 
 ## Overview
 
-OmniDesk is a modern productivity application built with React, TypeScript, and Vite. It provides a comprehensive solution for managing tasks, ideas, calendar events, and more, all stored locally in your browser.
+OmniDesk is a modern productivity application built with React, TypeScript, and Vite. It provides a comprehensive solution for managing tasks, ideas, calendar events, and more. Data can be stored locally in your browser or synced to the cloud using Supabase.
 
 ### Key Features
 - **Task Management**: Organize tasks with domains, states, deadlines, and enhanced subtasks (with descriptions and deadlines)
@@ -34,7 +39,8 @@ OmniDesk is a modern productivity application built with React, TypeScript, and 
 - **Calendar Integration**: View current month with events linked to your tasks and subtasks
 - **Drag-and-Drop Deletion**: Floating trash can for quick task deletion via drag-and-drop
 - **Adaptive Layout**: Dynamic sidebar that adjusts content area for optimal screen usage
-- **Local Storage**: All data persists in your browser - no backend required
+- **Flexible Storage**: Choose between local browser storage or cloud sync with Supabase
+- **Real-time Sync** (Supabase): Live updates across devices with real-time subscriptions
 - **Modern UI**: Glassmorphism design with smooth animations and transitions
 
 ### Technology Stack
@@ -43,6 +49,7 @@ OmniDesk is a modern productivity application built with React, TypeScript, and 
 - **Vite**: Fast build tooling and HMR
 - **React Router**: Client-side routing
 - **CSS3**: Modern styling with glassmorphism effects
+- **Supabase** (Optional): PostgreSQL database with real-time capabilities and authentication
 
 ## Support
 

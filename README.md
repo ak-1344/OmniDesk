@@ -16,6 +16,7 @@ OmniDesk is a lightweight productivity cockpit built with React, TypeScript, and
 - Vite for dev server and builds
 - React Router for routing
 - LocalStorage for persistence (no backend required)
+- Supabase for optional cloud sync and real-time collaboration
 
 ## Getting Started
 ### Prerequisites
@@ -57,6 +58,7 @@ npm run preview
 
 ## Deployment
 - Build with npm run build; deploy the dist/ directory to any static host (Vercel, Netlify, S3 + CDN, GitHub Pages).
+- For Supabase integration, see the [Supabase Setup Guide](docs/supabase-setup.md).
 - GitHub Actions workflow .github/workflows/ci.yml runs lint and build to validate changes before deployment.
 
 ## Contributing
