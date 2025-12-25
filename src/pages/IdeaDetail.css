@@ -28,6 +28,47 @@
 .header-actions {
   display: flex;
   gap: 1rem;
+  align-items: center;
+}
+
+.btn-toggle-canvas {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--accent-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-canvas:hover {
+  background: rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-toggle-canvas.active {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: var(--accent-secondary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.btn-convert {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-convert:hover {
+  background: rgba(16, 185, 129, 0.2);
+  transform: translateY(-2px);
 }
 
 .btn-delete-idea {
@@ -298,8 +339,136 @@
   font-size: 1.1rem;
 }
 
+.empty-notes .hint {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: var(--text-quaternary);
+}
+
+/* Canvas Mode Styles */
+.canvas-mode {
+  width: 100%;
+}
+
+.canvas-info {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.canvas-info p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.canvas-wrapper {
+  height: calc(100vh - 350px);
+  min-height: 600px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
   .notes-container {
     grid-template-columns: 1fr;
   }
+}
+
+/* Task Lineage Section */
+.task-lineage-section {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  margin-bottom: 2rem;
+}
+
+.lineage-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lineage-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lineage-task-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.lineage-task-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+  border-color: var(--accent-primary);
+}
+
+.lineage-task-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.lineage-task-title {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.lineage-task-domain {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lineage-task-state {
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  padding: 0.25rem 0.625rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.lineage-task-missing {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lineage-task-missing .lineage-task-title {
+  font-style: italic;
+  color: var(--text-tertiary);
+}
+
+.lineage-task-missing .lineage-task-state {
+  background: rgba(245, 101, 101, 0.1);
+  color: var(--error);
 }

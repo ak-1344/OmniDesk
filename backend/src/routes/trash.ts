@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../config/database';
 
 const router = Router();
 
 // Get all trash items for a user
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();
@@ -73,7 +73,7 @@ router.get('/', async (req, res) => {
 });
 
 // Restore an item from trash
-router.post('/:id/restore', async (req, res) => {
+router.post('/:id/restore', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = getDatabase();
@@ -106,7 +106,7 @@ router.post('/:id/restore', async (req, res) => {
 });
 
 // Permanently delete an item
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = getDatabase();
@@ -131,7 +131,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Empty trash
-router.delete('/', async (req, res) => {
+router.delete('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();

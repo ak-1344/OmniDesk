@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { getDatabase } from '../config/database';
 
 const router = Router();
 
 // Get user settings
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();
@@ -46,7 +46,7 @@ router.get('/', async (req, res) => {
 });
 
 // Update user settings
-router.put('/', async (req, res) => {
+router.put('/', async (req: Request, res: Response) => {
   try {
     const { theme, defaultView, dateFormat, weekStartsOn, notifications, trashRetentionDays, user_id } = req.body;
     const userId = user_id || 'default-user';

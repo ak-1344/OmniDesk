@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../config/database';
@@ -6,7 +6,7 @@ import { getDatabase } from '../config/database';
 const router = Router();
 
 // Get all tasks for a user
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get a single task
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = getDatabase();
@@ -104,7 +104,7 @@ router.post('/',
     body('state').isIn(['gotta-start', 'in-progress', 'nearly-done', 'paused', 'completed']),
     body('user_id').notEmpty().withMessage('User ID is required')
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -149,7 +149,7 @@ router.post('/',
 );
 
 // Update a task
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description, domainId, state, deadline, notes, proof } = req.body;
@@ -203,7 +203,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a task (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = getDatabase();

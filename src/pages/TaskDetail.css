@@ -579,3 +579,23 @@
     max-height: 500px;
   }
 }
+
+.idea-origin-link {
+  color: #a78bfa;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  background: rgba(167, 139, 250, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.idea-origin-link:hover {
+  background: rgba(167, 139, 250, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
+}

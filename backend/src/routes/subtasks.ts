@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../config/database';
 
 const router = Router();
 
 // Add a subtask to a task
-router.post('/:taskId', async (req, res) => {
+router.post('/:taskId', async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     const { title, description, state, deadline, scheduledTime, proof } = req.body;
@@ -55,7 +55,7 @@ router.post('/:taskId', async (req, res) => {
 });
 
 // Update a subtask
-router.put('/:taskId/:subtaskId', async (req, res) => {
+router.put('/:taskId/:subtaskId', async (req: Request, res: Response) => {
   try {
     const { taskId, subtaskId } = req.params;
     const { title, description, state, deadline, scheduledTime, proof, completedAt } = req.body;
@@ -95,7 +95,7 @@ router.put('/:taskId/:subtaskId', async (req, res) => {
 });
 
 // Delete a subtask
-router.delete('/:taskId/:subtaskId', async (req, res) => {
+router.delete('/:taskId/:subtaskId', async (req: Request, res: Response) => {
   try {
     const { taskId, subtaskId } = req.params;
     const db = getDatabase();
