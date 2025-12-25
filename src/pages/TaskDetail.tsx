@@ -45,6 +45,7 @@ const TaskDetail = () => {
   const [newSubtaskDeadline, setNewSubtaskDeadline] = useState('');
 
   const task = getTask(id || '');
+  const originIdea = task?.ideaId ? state.ideas.find(i => i.id === task.ideaId) : null;
   
   if (!task) {
     return (

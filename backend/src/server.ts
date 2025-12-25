@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { connectToDatabase, closeDatabaseConnection } from './config/database';
 
 // Import routes
+import authRouter from './routes/auth';
 import domainsRouter from './routes/domains';
 import tasksRouter from './routes/tasks';
 import subtasksRouter from './routes/subtasks';
@@ -37,6 +38,7 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+app.use('/api/auth', authRouter);
 app.use('/api/domains', domainsRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/subtasks', subtasksRouter);
