@@ -1,0 +1,23 @@
+.infinite-canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-secondary, #1e1e1e);
+  border-radius: 8px;
+}
+
+.infinite-canvas-container .tl-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Customize TLDraw theme to match OmniDesk */
+.infinite-canvas-container .tl-background {
+  background: var(--color-bg-secondary, #1e1e1e);
+}
+
+/* Make the canvas blend with the dark theme */
+.infinite-canvas-container .tl-canvas {
+  background: transparent;
+}

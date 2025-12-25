@@ -38,6 +38,7 @@ export interface Task {
   deletedAt?: string; // For trash
   notes?: string;
   proof?: string[];
+  ideaId?: string; // Reference to originating idea (for lineage tracking)
 }
 
 export type NoteContentType = 'text' | 'image' | 'whiteboard';
@@ -61,6 +62,11 @@ export interface Idea {
   deletedAt?: string; // For trash
   tags?: string[];
   position?: { x: number; y: number }; // For sticky note layout
+  
+  // Canvas-related fields
+  canvasEnabled?: boolean; // Whether infinite canvas is enabled for this idea
+  canvasData?: any; // TLDraw snapshot data (TLStoreSnapshot)
+  convertedToTasks?: string[]; // Array of task IDs created from this idea
 }
 
 export interface IdeaFolder {
