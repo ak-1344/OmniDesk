@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../config/database';
 
 const router = Router();
 
 // Get all calendar events for a user
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();
@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new calendar event
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { title, description, date, startTime, endTime, type, relatedTaskId, relatedSubtaskId, user_id } = req.body;
     const db = getDatabase();
@@ -71,7 +71,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update a calendar event
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description, date, startTime, endTime, type, relatedTaskId, relatedSubtaskId } = req.body;
@@ -115,7 +115,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a calendar event
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = getDatabase();

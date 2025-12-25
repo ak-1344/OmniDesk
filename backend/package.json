@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src --ext .ts",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "seed": "ts-node src/utils/seedData.ts"
   },
   "keywords": ["omnidesk", "mongodb", "express", "api"],
   "author": "",
