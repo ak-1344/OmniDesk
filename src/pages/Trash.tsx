@@ -1,5 +1,5 @@
 import { useApp } from '../context/AppContext';
-import type { Task, Idea } from '../types';
+import type { Task, Idea, Subtask } from '../types';
 import './Trash.css';
 
 const Trash = () => {
@@ -18,7 +18,7 @@ const Trash = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getItemPreview = (item: { type: string; item: Task | Idea }) => {
+  const getItemPreview = (item: { type: string; item: Task | Idea | Subtask }) => {
     if (!item || !item.item) return 'Unknown item';
     
     if (item.type === 'task') {
@@ -29,6 +29,9 @@ const Trash = () => {
       const textNote = idea.notes?.find(n => n.type === 'text');
       const text = textNote ? textNote.content : idea.title || 'Untitled idea';
       return text.substring(0, 100) + (text.length > 100 ? '...' : '');
+    } else if (item.type === 'subtask') {
+      const subtask = item.item as Subtask;
+      return subtask.title || 'Untitled subtask';
     }
     return 'Unknown item';
   };

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { 
@@ -9,8 +10,11 @@ import type {
   AppSettings,
   Subtask,
   TaskState,
-  TrashItem
+  TrashItem,
+  IdeaFolder
 } from '../types';
+import { getStorage } from '../lib/storage.factory';
+import type { IDataStorage } from '../lib/storage.interface';
 
 // Default settings
 const defaultSettings: AppSettings = {
@@ -26,17 +30,9 @@ const defaultSettings: AppSettings = {
   trashRetentionDays: 30,
 };
 
-// Default domains
-const defaultDomains: Domain[] = [
-  { id: '1', name: 'College', color: '#667eea', description: 'Academic work and studies' },
-  { id: '2', name: 'Personal', color: '#48bb78', description: 'Personal projects and growth' },
-  { id: '3', name: 'Work', color: '#ed8936', description: 'Professional work' },
-  { id: '4', name: 'Health', color: '#f56565', description: 'Health and fitness' },
-];
-
 // Initial state
 const initialState: AppState = {
-  domains: defaultDomains,
+  domains: [],
   tasks: [],
   ideas: [],
   ideaFolders: [],
@@ -46,145 +42,210 @@ const initialState: AppState = {
 
 interface AppContextType {
   state: AppState;
+  loading: boolean;
   
   // Domain operations
-  addDomain: (domain: Omit<Domain, 'id'>) => void;
-  updateDomain: (id: string, updates: Partial<Domain>) => void;
-  deleteDomain: (id: string) => void;
+  addDomain: (domain: Omit<Domain, 'id'>) => Promise<void>;
+  updateDomain: (id: string, updates: Partial<Domain>) => Promise<void>;
+  deleteDomain: (id: string) => Promise<void>;
   
   // Task operations
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => void;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
   getTask: (id: string) => Task | undefined;
   
   // Subtask operations
-  addSubtask: (taskId: string, subtask: Omit<Subtask, 'id'>) => void;
-  updateSubtask: (taskId: string, subtaskId: string, updates: Partial<Subtask>) => void;
-  deleteSubtask: (taskId: string, subtaskId: string) => void;
+  addSubtask: (taskId: string, subtask: Omit<Subtask, 'id'>) => Promise<void>;
+  updateSubtask: (taskId: string, subtaskId: string, updates: Partial<Subtask>) => Promise<void>;
+  deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
   
   // Idea operations
-  addIdea: (idea: Omit<Idea, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateIdea: (id: string, updates: Partial<Idea>) => void;
-  deleteIdea: (id: string) => void;
-  convertIdeaToTask: (ideaId: string, domainId: string, state: TaskState) => void;
+  addIdea: (idea: Omit<Idea, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateIdea: (id: string, updates: Partial<Idea>) => Promise<void>;
+  deleteIdea: (id: string) => Promise<void>;
+  convertIdeaToTask: (ideaId: string, domainId: string, state: TaskState) => Promise<void>;
+  
+  // Idea folder operations
+  addIdeaFolder: (folder: Omit<IdeaFolder, 'id'>) => Promise<void>;
+  updateIdeaFolder: (id: string, updates: Partial<IdeaFolder>) => Promise<void>;
+  deleteIdeaFolder: (id: string) => Promise<void>;
   
   // Event operations
-  addEvent: (event: Omit<CalendarEvent, 'id'>) => void;
-  updateEvent: (id: string, updates: Partial<CalendarEvent>) => void;
-  deleteEvent: (id: string) => void;
+  addEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<void>;
+  updateEvent: (id: string, updates: Partial<CalendarEvent>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   
   // Settings operations
-  updateSettings: (updates: Partial<AppSettings>) => void;
+  updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   
   // Trash operations
   trash: TrashItem[];
-  restoreFromTrash: (id: string) => void;
-  permanentlyDelete: (id: string) => void;
-  emptyTrash: () => void;
+  restoreFromTrash: (id: string) => Promise<void>;
+  permanentlyDelete: (id: string) => Promise<void>;
+  emptyTrash: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('omniDesk_state');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved state:', e);
-        return initialState;
-      }
-    }
-    return initialState;
-  });
+  const [state, setState] = useState<AppState>(initialState);
+  const [trash, setTrash] = useState<TrashItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [storage, setStorage] = useState<IDataStorage | null>(null);
 
-  const [trash, setTrash] = useState<TrashItem[]>(() => {
-    const saved = localStorage.getItem('omniDesk_trash');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved trash:', e);
-        return [];
-      }
-    }
-    return [];
-  });
-
-  // Save to localStorage whenever state changes
+  // Initialize storage and load data
   useEffect(() => {
-    localStorage.setItem('omniDesk_state', JSON.stringify(state));
-  }, [state]);
+    const initStorage = async () => {
+      try {
+        const storageInstance = await getStorage();
+        setStorage(storageInstance);
+        
+        // Load all data
+        const [
+          domains,
+          tasks,
+          ideas,
+          ideaFolders,
+          events,
+          settings,
+          trashItems,
+        ] = await Promise.all([
+          storageInstance.getDomains(),
+          storageInstance.getTasks(),
+          storageInstance.getIdeas(),
+          storageInstance.getIdeaFolders(),
+          storageInstance.getCalendarEvents(),
+          storageInstance.getSettings(),
+          storageInstance.getTrash(),
+        ]);
 
-  useEffect(() => {
-    localStorage.setItem('omniDesk_trash', JSON.stringify(trash));
-  }, [trash]);
+        setState({
+          domains,
+          tasks,
+          ideas,
+          ideaFolders,
+          events,
+          settings,
+        });
+        setTrash(trashItems);
 
-  // Helper to generate IDs
-  const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
+        // Subscribe to real-time updates if available
+        if (storageInstance.subscribeToTasks) {
+          storageInstance.subscribeToTasks((updatedTasks) => {
+            setState(prev => ({ ...prev, tasks: updatedTasks }));
+          });
+        }
+
+        if (storageInstance.subscribeToIdeas) {
+          storageInstance.subscribeToIdeas((updatedIdeas) => {
+            setState(prev => ({ ...prev, ideas: updatedIdeas }));
+          });
+        }
+
+        if (storageInstance.subscribeToEvents) {
+          storageInstance.subscribeToEvents((updatedEvents) => {
+            setState(prev => ({ ...prev, events: updatedEvents }));
+          });
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to initialize storage:', error);
+        setLoading(false);
+      }
+    };
+
+    initStorage();
+  }, []);
+
+  // Helper to refresh data after mutations
+  const refreshDomains = async () => {
+    if (storage) {
+      const domains = await storage.getDomains();
+      setState(prev => ({ ...prev, domains }));
+    }
+  };
+
+  const refreshTasks = async () => {
+    if (storage) {
+      const tasks = await storage.getTasks();
+      setState(prev => ({ ...prev, tasks }));
+    }
+  };
+
+  const refreshIdeas = async () => {
+    if (storage) {
+      const ideas = await storage.getIdeas();
+      setState(prev => ({ ...prev, ideas }));
+    }
+  };
+
+  const refreshIdeaFolders = async () => {
+    if (storage) {
+      const ideaFolders = await storage.getIdeaFolders();
+      setState(prev => ({ ...prev, ideaFolders }));
+    }
+  };
+
+  const refreshEvents = async () => {
+    if (storage) {
+      const events = await storage.getCalendarEvents();
+      setState(prev => ({ ...prev, events }));
+    }
+  };
+
+  const refreshSettings = async () => {
+    if (storage) {
+      const settings = await storage.getSettings();
+      setState(prev => ({ ...prev, settings }));
+    }
+  };
+
+  const refreshTrash = async () => {
+    if (storage) {
+      const trashItems = await storage.getTrash();
+      setTrash(trashItems);
+    }
+  };
 
   // Domain operations
-  const addDomain = (domain: Omit<Domain, 'id'>) => {
-    const newDomain: Domain = { ...domain, id: generateId() };
-    setState(prev => ({ ...prev, domains: [...prev.domains, newDomain] }));
+  const addDomain = async (domain: Omit<Domain, 'id'>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.addDomain(domain);
+    await refreshDomains();
   };
 
-  const updateDomain = (id: string, updates: Partial<Domain>) => {
-    setState(prev => ({
-      ...prev,
-      domains: prev.domains.map(d => d.id === id ? { ...d, ...updates } : d)
-    }));
+  const updateDomain = async (id: string, updates: Partial<Domain>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateDomain(id, updates);
+    await refreshDomains();
   };
 
-  const deleteDomain = (id: string) => {
-    setState(prev => ({
-      ...prev,
-      domains: prev.domains.filter(d => d.id !== id)
-    }));
+  const deleteDomain = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.deleteDomain(id);
+    await refreshDomains();
   };
 
   // Task operations
-  const addTask = (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => {
-    const now = new Date().toISOString();
-    const newTask: Task = {
-      ...task,
-      id: generateId(),
-      subtasks: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    setState(prev => ({ ...prev, tasks: [...prev.tasks, newTask] }));
+  const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'subtasks'>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.addTask(task);
+    await refreshTasks();
   };
 
-  const updateTask = (id: string, updates: Partial<Task>) => {
-    setState(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(t => 
-        t.id === id 
-          ? { ...t, ...updates, updatedAt: new Date().toISOString() } 
-          : t
-      )
-    }));
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateTask(id, updates);
+    await refreshTasks();
   };
 
-  const deleteTask = (id: string) => {
-    const task = state.tasks.find(t => t.id === id);
-    if (task) {
-      const trashItem: TrashItem = {
-        id: generateId(),
-        type: 'task',
-        item: task,
-        deletedAt: new Date().toISOString(),
-        deletedBy: 'You',
-      };
-      setTrash(prev => [...prev, trashItem]);
-      setState(prev => ({
-        ...prev,
-        tasks: prev.tasks.filter(t => t.id !== id)
-      }));
-    }
+  const deleteTask = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.deleteTask(id);
+    await refreshTasks();
+    await refreshTrash();
   };
 
   const getTask = (id: string) => {
@@ -192,94 +253,49 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Subtask operations
-  const addSubtask = (taskId: string, subtask: Omit<Subtask, 'id'>) => {
-    const newSubtask: Subtask = { ...subtask, id: generateId() };
-    setState(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(t =>
-        t.id === taskId
-          ? { ...t, subtasks: [...t.subtasks, newSubtask], updatedAt: new Date().toISOString() }
-          : t
-      )
-    }));
+  const addSubtask = async (taskId: string, subtask: Omit<Subtask, 'id'>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.addSubtask(taskId, subtask);
+    await refreshTasks();
   };
 
-  const updateSubtask = (taskId: string, subtaskId: string, updates: Partial<Subtask>) => {
-    setState(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(t =>
-        t.id === taskId
-          ? {
-              ...t,
-              subtasks: t.subtasks.map(s => s.id === subtaskId ? { ...s, ...updates } : s),
-              updatedAt: new Date().toISOString()
-            }
-          : t
-      )
-    }));
+  const updateSubtask = async (taskId: string, subtaskId: string, updates: Partial<Subtask>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateSubtask(taskId, subtaskId, updates);
+    await refreshTasks();
   };
 
-  const deleteSubtask = (taskId: string, subtaskId: string) => {
-    setState(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(t =>
-        t.id === taskId
-          ? {
-              ...t,
-              subtasks: t.subtasks.filter(s => s.id !== subtaskId),
-              updatedAt: new Date().toISOString()
-            }
-          : t
-      )
-    }));
+  const deleteSubtask = async (taskId: string, subtaskId: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.deleteSubtask(taskId, subtaskId);
+    await refreshTasks();
   };
 
   // Idea operations
-  const addIdea = (idea: Omit<Idea, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date().toISOString();
-    const newIdea: Idea = {
-      ...idea,
-      id: generateId(),
-      createdAt: now,
-      updatedAt: now,
-    };
-    setState(prev => ({ ...prev, ideas: [...prev.ideas, newIdea] }));
+  const addIdea = async (idea: Omit<Idea, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.addIdea(idea);
+    await refreshIdeas();
   };
 
-  const updateIdea = (id: string, updates: Partial<Idea>) => {
-    setState(prev => ({
-      ...prev,
-      ideas: prev.ideas.map(i =>
-        i.id === id
-          ? { ...i, ...updates, updatedAt: new Date().toISOString() }
-          : i
-      )
-    }));
+  const updateIdea = async (id: string, updates: Partial<Idea>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateIdea(id, updates);
+    await refreshIdeas();
   };
 
-  const deleteIdea = (id: string) => {
-    const idea = state.ideas.find(i => i.id === id);
-    if (idea) {
-      const trashItem: TrashItem = {
-        id: generateId(),
-        type: 'idea',
-        item: idea,
-        deletedAt: new Date().toISOString(),
-        deletedBy: 'You',
-      };
-      setTrash(prev => [...prev, trashItem]);
-      setState(prev => ({
-        ...prev,
-        ideas: prev.ideas.filter(i => i.id !== id)
-      }));
-    }
+  const deleteIdea = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.deleteIdea(id);
+    await refreshIdeas();
+    await refreshTrash();
   };
 
-  const convertIdeaToTask = (ideaId: string, domainId: string, state: TaskState) => {
-    const idea = getIdea(ideaId);
+  const convertIdeaToTask = async (ideaId: string, domainId: string, state: TaskState) => {
+    const idea = await storage?.getIdea(ideaId);
     if (idea) {
       const textContent = idea.notes.find(n => n.type === 'text')?.content || '';
-      addTask({
+      await addTask({
         title: idea.title || textContent.substring(0, 50),
         description: textContent,
         domainId,
@@ -288,62 +304,75 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getIdea = (id: string) => {
-    return state.ideas.find(i => i.id === id);
+  // Idea folder operations
+  const addIdeaFolder = async (folder: Omit<IdeaFolder, 'id'>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.addIdeaFolder(folder);
+    await refreshIdeaFolders();
+  };
+
+  const updateIdeaFolder = async (id: string, updates: Partial<IdeaFolder>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateIdeaFolder(id, updates);
+    await refreshIdeaFolders();
+  };
+
+  const deleteIdeaFolder = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.deleteIdeaFolder(id);
+    await refreshIdeaFolders();
   };
 
   // Event operations
-  const addEvent = (event: Omit<CalendarEvent, 'id'>) => {
-    const newEvent: CalendarEvent = { ...event, id: generateId() };
-    setState(prev => ({ ...prev, events: [...prev.events, newEvent] }));
+  const addEvent = async (event: Omit<CalendarEvent, 'id'>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.addCalendarEvent(event);
+    await refreshEvents();
   };
 
-  const updateEvent = (id: string, updates: Partial<CalendarEvent>) => {
-    setState(prev => ({
-      ...prev,
-      events: prev.events.map(e => e.id === id ? { ...e, ...updates } : e)
-    }));
+  const updateEvent = async (id: string, updates: Partial<CalendarEvent>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateCalendarEvent(id, updates);
+    await refreshEvents();
   };
 
-  const deleteEvent = (id: string) => {
-    setState(prev => ({
-      ...prev,
-      events: prev.events.filter(e => e.id !== id)
-    }));
+  const deleteEvent = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.deleteCalendarEvent(id);
+    await refreshEvents();
   };
 
   // Settings operations
-  const updateSettings = (updates: Partial<AppSettings>) => {
-    setState(prev => ({
-      ...prev,
-      settings: { ...prev.settings, ...updates }
-    }));
+  const updateSettingsHandler = async (updates: Partial<AppSettings>) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.updateSettings(updates);
+    await refreshSettings();
   };
 
   // Trash operations
-  const restoreFromTrash = (id: string) => {
-    const item = trash.find(t => t.id === id);
-    if (!item) return;
-
-    if (item.type === 'task') {
-      setState(prev => ({ ...prev, tasks: [...prev.tasks, item.item as Task] }));
-    } else if (item.type === 'idea') {
-      setState(prev => ({ ...prev, ideas: [...prev.ideas, item.item as Idea] }));
-    }
-
-    setTrash(prev => prev.filter(t => t.id !== id));
+  const restoreFromTrash = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.restoreFromTrash(id);
+    await refreshTasks();
+    await refreshIdeas();
+    await refreshTrash();
   };
 
-  const permanentlyDelete = (id: string) => {
-    setTrash(prev => prev.filter(t => t.id !== id));
+  const permanentlyDelete = async (id: string) => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.permanentlyDelete(id);
+    await refreshTrash();
   };
 
-  const emptyTrash = () => {
-    setTrash([]);
+  const emptyTrash = async () => {
+    if (!storage) throw new Error('Storage not initialized');
+    await storage.emptyTrash();
+    await refreshTrash();
   };
 
   const value: AppContextType = {
     state,
+    loading,
     addDomain,
     updateDomain,
     deleteDomain,
@@ -358,15 +387,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateIdea,
     deleteIdea,
     convertIdeaToTask,
+    addIdeaFolder,
+    updateIdeaFolder,
+    deleteIdeaFolder,
     addEvent,
     updateEvent,
     deleteEvent,
-    updateSettings,
+    updateSettings: updateSettingsHandler,
     trash,
     restoreFromTrash,
     permanentlyDelete,
     emptyTrash,
   };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div>Loading OmniDesk...</div>
+      </div>
+    );
+  }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
