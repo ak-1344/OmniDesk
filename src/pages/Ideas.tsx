@@ -93,6 +93,16 @@ const Ideas = () => {
                       {n.type === 'text' ? '📝' : n.type === 'image' ? '🖼️' : '🎨'}
                     </span>
                   ))}
+                  {idea.canvasEnabled && (
+                    <span className="note-type-icon canvas" title="Canvas enabled">
+                      ✨
+                    </span>
+                  )}
+                  {idea.convertedToTasks && idea.convertedToTasks.length > 0 && (
+                    <span className="note-type-icon converted" title={`Converted to ${idea.convertedToTasks.length} task(s)`}>
+                      ✓ {idea.convertedToTasks.length}
+                    </span>
+                  )}
                 </div>
                 <span className="sticky-note-date">
                   {new Date(idea.createdAt).toLocaleDateString()}

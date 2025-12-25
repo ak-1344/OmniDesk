@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../config/database';
@@ -6,7 +6,7 @@ import { getDatabase } from '../config/database';
 const router = Router();
 
 // Get all domains for a user
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();
@@ -38,7 +38,7 @@ router.post('/',
     body('color').matches(/^#[0-9A-Fa-f]{6}$/).withMessage('Invalid color format'),
     body('user_id').notEmpty().withMessage('User ID is required')
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -79,7 +79,7 @@ router.put('/:id',
     body('name').optional().notEmpty().trim(),
     body('color').optional().matches(/^#[0-9A-Fa-f]{6}$/)
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -123,7 +123,7 @@ router.put('/:id',
 // Delete a domain
 router.delete('/:id',
   [param('id').isMongoId().withMessage('Invalid domain ID')],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
