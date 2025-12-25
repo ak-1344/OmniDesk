@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../config/database';
 
 const router = Router();
 
 // Get all idea folders for a user
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.user_id as string || 'default-user';
     const db = getDatabase();
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new idea folder
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, color, user_id } = req.body;
     const db = getDatabase();
@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update an idea folder
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, color } = req.body;
@@ -87,7 +87,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete an idea folder
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = getDatabase();
