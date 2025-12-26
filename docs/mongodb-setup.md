@@ -5,21 +5,21 @@ This guide walks you through setting up the MongoDB backend API server for OmniD
 ## Architecture Overview
 
 ```
-┌─────────────────┐         HTTP/REST          ┌──────────────────┐
-│                 │ ◄────────────────────────► │                  │
-│  Frontend (React)│                            │  Backend (Express)│
-│  Vite + TypeScript│                           │  Node.js + TypeScript│
-│                 │                             │                  │
-└─────────────────┘                             └──────────────────┘
+┌───────────────────┐         HTTP/REST           ┌────────────────────────┐
+│                   │ ◄────────────────────────►  │                        │
+│  Frontend (React) │                             │   Backend (Express)    │
+│  Vite + TypeScript│                             │  Node.js + TypeScript  │
+│                   │                             │                        │
+└───────────────────┘                             └────────────────────────┘
                                                         │
                                                         │ MongoDB Driver
                                                         ▼
-                                                ┌──────────────────┐
-                                                │                  │
-                                                │    MongoDB       │
-                                                │    Database      │
-                                                │                  │
-                                                └──────────────────┘
+                                                   ┌──────────────────┐
+                                                   │                  │
+                                                   │    MongoDB       │
+                                                   │    Database      │
+                                                   │                  │
+                                                   └──────────────────┘
 ```
 
 ## Prerequisites
