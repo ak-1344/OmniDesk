@@ -83,7 +83,8 @@ export interface CalendarEvent {
   date: string;
   startTime?: string;
   endTime?: string;
-  type: 'task-deadline' | 'subtask-scheduled' | 'personal-event';
+  duration?: number;
+  type: 'task-deadline' | 'subtask-scheduled' | 'personal-event' | 'meeting' | 'event' | 'task' | 'blocked' | 'available';
   relatedTaskId?: string;
   relatedSubtaskId?: string;
 }

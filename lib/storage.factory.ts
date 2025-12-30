@@ -9,10 +9,8 @@ export type StorageBackend = 'localstorage' | 'mongodb' | 'sync';
 
 // Get configured storage backend
 export const getStorageBackend = (): StorageBackend => {
-  // Next.js uses NEXT_PUBLIC_ prefix for client-side env vars
-  const backend = process.env.NEXT_PUBLIC_STORAGE_BACKEND as StorageBackend;
-  // Default to sync mode (localStorage with MongoDB sync when available)
-  return backend || 'sync';
+  const backend = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_STORAGE_BACKEND : undefined) || (import.meta as any).env?.VITE_STORAGE_BACKEND;
+  return (backend as StorageBackend) || 'localstorage';
 };
 
 let storageInstance: IDataStorage | null = null;

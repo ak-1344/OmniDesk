@@ -14,28 +14,28 @@ interface KanbanColumn {
 const TaskDetail = () => {
   const { id } = useParams();
   const { state, getTask, addSubtask, updateSubtask, deleteSubtask } = useApp();
-  
+
   const [kanbanColumns, setKanbanColumns] = useState<KanbanColumn[]>([
-    { 
-      id: 'todo', 
-      title: 'To Do', 
+    {
+      id: 'todo',
+      title: 'To Do',
       color: '#667eea',
       gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
     },
-    { 
-      id: 'in-progress', 
-      title: 'In Progress', 
+    {
+      id: 'in-progress',
+      title: 'In Progress',
       color: '#f093fb',
       gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
     },
-    { 
-      id: 'completed', 
-      title: 'Completed', 
+    {
+      id: 'completed',
+      title: 'Completed',
       color: '#43e97b',
       gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
     },
   ]);
-  
+
   const [draggedSubtask, setDraggedSubtask] = useState<string | null>(null);
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -45,8 +45,8 @@ const TaskDetail = () => {
   const [newSubtaskDeadline, setNewSubtaskDeadline] = useState('');
 
   const task = getTask(id || '');
-  const originIdea = task?.ideaId ? state.ideas.find(i => i.id === task.ideaId) : null;
-  
+  const _originIdea = task?.ideaId ? state.ideas.find(i => i.id === task.ideaId) : null;
+
   if (!task) {
     return (
       <div className="page task-detail-page">
@@ -82,7 +82,7 @@ const TaskDetail = () => {
       const columnId = newColumnTitle.toLowerCase().replace(/\s+/g, '-') as SubtaskState;
       const colors = ['#4facfe', '#fa709a', '#ffa751', '#a8edea', '#fed6e3'];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      
+
       setKanbanColumns([...kanbanColumns, {
         id: columnId,
         title: newColumnTitle,
@@ -112,7 +112,7 @@ const TaskDetail = () => {
   const handleToggleSubtask = (subtaskId: string, currentState: SubtaskState) => {
     if (task) {
       const newState: SubtaskState = currentState === 'completed' ? 'todo' : 'completed';
-      updateSubtask(task.id, subtaskId, { 
+      updateSubtask(task.id, subtaskId, {
         state: newState,
         completedAt: newState === 'completed' ? new Date().toISOString() : undefined
       });
@@ -145,9 +145,9 @@ const TaskDetail = () => {
         <div className="task-detail-title">
           <h1>{task.title}</h1>
           <div className="task-detail-badges">
-            <span 
+            <span
               className="domain-badge"
-              style={{ 
+              style={{
                 background: domain ? `${domain.color}25` : 'rgba(255,255,255,0.05)',
                 color: domain?.color || 'var(--text-primary)',
                 border: `1px solid ${domain?.color || 'var(--glass-border)'}60`
@@ -175,19 +175,19 @@ const TaskDetail = () => {
           <span>📋 {totalSubtasks} subtasks ({completedSubtasks} completed)</span>
           <span>•</span>
           <span className="progress-indicator">
-            Progress: <strong style={{ 
+            Progress: <strong style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>{progress}%</strong>
           </span>
         </div>
-        
+
         {totalSubtasks > 0 && (
           <div className="task-progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ 
+            <div
+              className="progress-fill"
+              style={{
                 width: `${progress}%`,
                 background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
               }}
@@ -199,8 +199,8 @@ const TaskDetail = () => {
       <div className="kanban-board-container">
         <div className="kanban-board-header">
           <h2>Subtask Kanban Board</h2>
-          <button 
-            className="btn-add-column" 
+          <button
+            className="btn-add-column"
             onClick={() => setShowAddColumn(!showAddColumn)}
           >
             + Add Column
@@ -229,10 +229,10 @@ const TaskDetail = () => {
           {kanbanColumns.map((column) => {
             const items = getSubtasksByStatus(column.id);
             const isDefaultColumn = ['todo', 'in-progress', 'completed'].includes(column.id);
-            
+
             return (
-              <div 
-                key={column.id} 
+              <div
+                key={column.id}
                 className="kanban-column"
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(column.id)}
@@ -243,7 +243,7 @@ const TaskDetail = () => {
                     <span className="item-count">{items.length}</span>
                   </div>
                   {!isDefaultColumn && (
-                    <button 
+                    <button
                       className="btn-delete-column"
                       onClick={() => handleDeleteColumn(column.id)}
                       title="Delete column"
@@ -252,18 +252,18 @@ const TaskDetail = () => {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="kanban-items">
                   {items.map((item) => (
-                    <div 
-                      key={item.id} 
+                    <div
+                      key={item.id}
                       className="kanban-item"
                       draggable
                       onDragStart={() => handleDragStart(item.id)}
                     >
                       <div className="kanban-item-checkbox">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={item.state === 'completed'}
                           onChange={() => handleToggleSubtask(item.id, item.state)}
                         />
@@ -279,7 +279,7 @@ const TaskDetail = () => {
                           <p className="subtask-deadline">📅 {new Date(item.deadline).toLocaleDateString()}</p>
                         )}
                       </div>
-                      <button 
+                      <button
                         className="btn-delete-subtask"
                         onClick={() => task && deleteSubtask(task.id, item.id)}
                         title="Delete subtask"
@@ -288,14 +288,14 @@ const TaskDetail = () => {
                       </button>
                     </div>
                   ))}
-                  
+
                   {items.length === 0 && !showAddSubtask && (
                     <div className="kanban-empty">
                       <p>No items yet</p>
                       <span>Drag tasks here or add new ones</span>
                     </div>
                   )}
-                  
+
                   {showAddSubtask === column.id ? (
                     <div className="add-subtask-form">
                       <input
@@ -321,13 +321,13 @@ const TaskDetail = () => {
                         <button onClick={() => handleAddSubtask(column.id)} className="btn-primary btn-sm">
                           Add
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setShowAddSubtask(null);
                             setNewSubtaskTitle('');
                             setNewSubtaskDescription('');
                             setNewSubtaskDeadline('');
-                          }} 
+                          }}
                           className="btn-secondary btn-sm"
                         >
                           Cancel
@@ -335,7 +335,7 @@ const TaskDetail = () => {
                       </div>
                     </div>
                   ) : (
-                    <button 
+                    <button
                       className="kanban-add-btn"
                       onClick={() => setShowAddSubtask(column.id)}
                     >

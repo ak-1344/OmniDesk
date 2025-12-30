@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ConnectionStatus.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) || (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
 
 export const ConnectionStatus = () => {
   const [status, setStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');

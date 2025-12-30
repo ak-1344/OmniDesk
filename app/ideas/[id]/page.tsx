@@ -2,15 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import dynamic from "next/dynamic"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Plus,
-  GripVertical,
   Trash2,
   ArrowRight,
   Save,
@@ -18,12 +15,13 @@ import {
   X,
   Move,
   Palette,
-  PenTool,
-  Layers,
   ZoomIn,
   ZoomOut,
-  Maximize2,
-  Minimize2,
+  Pencil,
+  Eraser,
+  Circle,
+  Square,
+  Minus,
 } from "lucide-react"
 import {
   Dialog,
@@ -48,16 +46,6 @@ import { useApp } from "@/context/AppContext"
 import { cn } from "@/lib/utils"
 import type { NoteContent, TaskState } from "@/types"
 
-// Dynamically import tldraw to avoid SSR issues
-const Tldraw = dynamic(() => import('@tldraw/tldraw').then(mod => mod.Tldraw), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full bg-muted/20">
-      <p className="text-sm text-muted-foreground">Loading canvas...</p>
-    </div>
-  ),
-})
-
 // Card color options
 const CARD_COLORS = [
   { name: 'Yellow', value: '#fef3c7', border: '#f59e0b' },
@@ -68,6 +56,9 @@ const CARD_COLORS = [
   { name: 'Orange', value: '#ffedd5', border: '#f97316' },
   { name: 'White', value: '#ffffff', border: '#e5e7eb' },
 ]
+
+// Drawing tool colors
+const DRAW_COLORS = ['#1e293b', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6']
 
 interface CanvasCard {
   id: string
@@ -81,11 +72,14 @@ interface CanvasCard {
   note: NoteContent
 }
 
+type DrawTool = 'pen' | 'eraser' | 'line'
+
 export default function IdeaDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { state, updateIdea, deleteIdea, addTask } = useApp()
-  const canvasRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const ideaId = params?.id as string
   const idea = ideaId ? state.ideas.find(i => i.id === ideaId) : null
@@ -100,42 +94,95 @@ export default function IdeaDetailPage() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [convertDialogOpen, setConvertDialogOpen] = useState(false)
   const [newTaskDomain, setNewTaskDomain] = useState("")
-  const [canvasMode, setCanvasMode] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0, panX: 0, panY: 0 })
 
+  // Drawing state
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [drawTool, setDrawTool] = useState<DrawTool>('pen')
+  const [drawColor, setDrawColor] = useState('#1e293b')
+  const [drawSize, setDrawSize] = useState(2)
+  const [lastPoint, setLastPoint] = useState<{ x: number; y: number } | null>(null)
+
+  // Initialize canvas
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+    if (!canvas || !container) return
+
+    // Set canvas size
+    canvas.width = container.offsetWidth
+    canvas.height = container.offsetHeight
+
+    // Load saved drawing data
+    if (idea?.canvasData && typeof idea.canvasData === 'string') {
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        const img = new Image()
+        img.onload = () => ctx.drawImage(img, 0, 0)
+        img.src = idea.canvasData
+      }
+    }
+  }, [idea])
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container) return
+
+      // Save current drawing
+      const imageData = canvas.toDataURL()
+
+      // Resize canvas
+      canvas.width = container.offsetWidth
+      canvas.height = container.offsetHeight
+
+      // Restore drawing
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        const img = new Image()
+        img.onload = () => ctx.drawImage(img, 0, 0)
+        img.src = imageData
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   useEffect(() => {
     if (idea) {
       setTitle(idea.title || "")
-      setCanvasMode(idea.canvasEnabled || false)
-      // Main content is the first text note or empty
       const mainNote = idea.notes.find(n => n.type === 'text' && n.order === 0)
       setMainContent(mainNote?.content || "")
 
-      // Other notes become cards with enhanced properties
       const noteCards = idea.notes
         .filter(n => n.order > 0)
-        .map((note, index) => {
-          // Parse heading and color from note content if stored
-          const parts = note.content.split('\n')
-          const hasHeading = parts.length > 1
-          return {
-            id: note.id,
-            x: (note as any).x ?? (50 + (index % 3) * 320),
-            y: (note as any).y ?? (50 + Math.floor(index / 3) * 200),
-            width: (note as any).width ?? 300,
-            height: (note as any).height ?? 180,
-            color: (note as any).color ?? CARD_COLORS[0].value,
-            borderColor: (note as any).borderColor ?? CARD_COLORS[0].border,
-            heading: (note as any).heading ?? '',
-            note,
-          }
-        })
+        .map((note, index) => ({
+          id: note.id,
+          x: (note as any).x ?? (50 + (index % 3) * 320),
+          y: (note as any).y ?? (50 + Math.floor(index / 3) * 200),
+          width: (note as any).width ?? 300,
+          height: (note as any).height ?? 180,
+          color: (note as any).color ?? CARD_COLORS[0].value,
+          borderColor: (note as any).borderColor ?? CARD_COLORS[0].border,
+          heading: (note as any).heading ?? '',
+          note,
+        }))
       setCards(noteCards)
     }
   }, [idea])
+
+  const saveCanvasData = useCallback(async () => {
+    const canvas = canvasRef.current
+    if (!canvas || !idea) return
+    const dataUrl = canvas.toDataURL('image/png')
+    await updateIdea(idea.id, { canvasData: dataUrl })
+  }, [idea, updateIdea])
 
   const handleSave = useCallback(async () => {
     if (!idea) return
@@ -151,7 +198,6 @@ export default function IdeaDetailPage() {
       ...cards.map((card, index) => ({
         ...card.note,
         order: index + 1,
-        // Store card position and style in note
         x: card.x,
         y: card.y,
         width: card.width,
@@ -159,21 +205,81 @@ export default function IdeaDetailPage() {
         color: card.color,
         borderColor: card.borderColor,
         heading: card.heading,
-      } as NoteContent & { x: number; y: number; width: number; height: number; color: string; borderColor: string; heading: string }))
+      } as any))
     ]
 
-    await updateIdea(idea.id, { title, notes, canvasEnabled: canvasMode })
-  }, [idea, title, mainContent, cards, canvasMode, updateIdea])
+    await updateIdea(idea.id, { title, notes })
+    await saveCanvasData()
+  }, [idea, title, mainContent, cards, updateIdea, saveCanvasData])
+
+  // Drawing functions
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectedCardId) return // Don't draw if a card is selected
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / zoom
+    const y = (e.clientY - rect.top) / zoom
+
+    setIsDrawing(true)
+    setLastPoint({ x, y })
+
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+    }
+  }
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !lastPoint) return
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / zoom
+    const y = (e.clientY - rect.top) / zoom
+
+    ctx.strokeStyle = drawTool === 'eraser' ? '#ffffff' : drawColor
+    ctx.lineWidth = drawTool === 'eraser' ? drawSize * 5 : drawSize
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+
+    ctx.lineTo(x, y)
+    ctx.stroke()
+
+    setLastPoint({ x, y })
+  }
+
+  const stopDrawing = () => {
+    if (isDrawing) {
+      setIsDrawing(false)
+      setLastPoint(null)
+      saveCanvasData()
+    }
+  }
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (canvas && ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      saveCanvasData()
+    }
+  }
 
   const handleAddCard = () => {
+    const colorIndex = Math.floor(Math.random() * CARD_COLORS.length)
     const newCard: CanvasCard = {
       id: Date.now().toString(),
-      x: 100 + Math.random() * 200 - pan.x,
-      y: 100 + Math.random() * 100 - pan.y,
+      x: 100 + Math.random() * 200,
+      y: 100 + Math.random() * 100,
       width: 300,
       height: 180,
-      color: CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)].value,
-      borderColor: CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)].border,
+      color: CARD_COLORS[colorIndex].value,
+      borderColor: CARD_COLORS[colorIndex].border,
       heading: '',
       note: {
         id: Date.now().toString(),
@@ -227,12 +333,6 @@ export default function IdeaDetailPage() {
           : card
       ))
     }
-
-    if (isPanning) {
-      const dx = e.clientX - panStart.x
-      const dy = e.clientY - panStart.y
-      setPan({ x: panStart.panX + dx, y: panStart.panY + dy })
-    }
   }
 
   const handleCardMouseUp = () => {
@@ -241,7 +341,6 @@ export default function IdeaDetailPage() {
     }
     setIsDragging(false)
     setIsResizing(false)
-    setIsPanning(false)
   }
 
   const handleResizeStart = (e: React.MouseEvent, cardId: string) => {
@@ -277,15 +376,6 @@ export default function IdeaDetailPage() {
     ))
   }
 
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    // Only start panning if clicking on the canvas background (not on cards)
-    if (e.target === canvasRef.current || (e.target as HTMLElement).classList.contains('canvas-bg')) {
-      setIsPanning(true)
-      setPanStart({ x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y })
-      setSelectedCardId(null)
-    }
-  }
-
   const handleConvertToTask = async () => {
     if (!idea || !newTaskDomain) return
 
@@ -313,16 +403,6 @@ export default function IdeaDetailPage() {
     }
   }
 
-  const handleCanvasSave = useCallback(async (editor: any) => {
-    if (!idea) return
-    try {
-      const snapshot = editor.store.getSnapshot()
-      await updateIdea(idea.id, { canvasData: snapshot })
-    } catch (error) {
-      console.error('Failed to save canvas:', error)
-    }
-  }, [idea, updateIdea])
-
   if (!idea) {
     return (
       <div className="h-full w-full flex items-center justify-center">
@@ -349,46 +429,19 @@ export default function IdeaDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Mode Toggle */}
-          <div className="flex items-center bg-muted rounded-lg p-0.5 mr-2">
-            <Button
-              variant={!canvasMode ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setCanvasMode(false)}
-              className="h-7 px-3 gap-1"
-            >
-              <StickyNote className="size-3" />
-              Notes
+          <Button variant="outline" size="sm" onClick={handleAddCard} className="gap-1">
+            <StickyNote className="size-3" />
+            Add Note
+          </Button>
+          <div className="flex items-center gap-1 border rounded-lg px,1">
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}>
+              <ZoomOut className="size-3" />
             </Button>
-            <Button
-              variant={canvasMode ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setCanvasMode(true)}
-              className="h-7 px-3 gap-1"
-            >
-              <PenTool className="size-3" />
-              Canvas
+            <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setZoom(z => Math.min(2, z + 0.1))}>
+              <ZoomIn className="size-3" />
             </Button>
           </div>
-
-          {!canvasMode && (
-            <>
-              <Button variant="outline" size="sm" onClick={handleAddCard} className="gap-1">
-                <StickyNote className="size-3" />
-                Add Note
-              </Button>
-              {/* Zoom Controls */}
-              <div className="flex items-center gap-1 border rounded-lg px-1">
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}>
-                  <ZoomOut className="size-3" />
-                </Button>
-                <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setZoom(z => Math.min(2, z + 0.1))}>
-                  <ZoomIn className="size-3" />
-                </Button>
-              </div>
-            </>
-          )}
           <Button variant="outline" size="sm" onClick={() => setConvertDialogOpen(true)} className="gap-1">
             <ArrowRight className="size-3" />
             Convert to Task
@@ -405,185 +458,222 @@ export default function IdeaDetailPage() {
 
       {/* Canvas Area */}
       <div className="flex-1 flex overflow-hidden">
-        {canvasMode ? (
-          /* Full tldraw Canvas Mode */
-          <div className="flex-1 relative">
-            <Tldraw
-              onMount={(editor) => {
-                console.log('Canvas mounted for idea:', ideaId)
+        {/* Main content sidebar */}
+        <div className="w-48 border-r border-border/50 p-4 overflow-y-auto bg-muted/10 flex-shrink-0">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Main Context</h3>
+          <Textarea
+            value={mainContent}
+            onChange={(e) => setMainContent(e.target.value)}
+            onBlur={handleSave}
+            placeholder="Write the main idea and context here..."
+            className="min-h-[200px] resize-none border-border/50 text-sm"
+          />
+        </div>
 
-                // Load initial data if provided
-                if (idea.canvasData && typeof idea.canvasData === 'object') {
-                  try {
-                    editor.store.loadSnapshot(idea.canvasData)
-                  } catch (error) {
-                    console.warn('Could not load canvas data:', error)
-                  }
-                }
-
-                // Setup auto-save
-                let saveTimeout: NodeJS.Timeout
-                const unsubscribe = editor.store.listen(() => {
-                  clearTimeout(saveTimeout)
-                  saveTimeout = setTimeout(() => {
-                    handleCanvasSave(editor)
-                  }, 2000)
-                })
-
-                return () => {
-                  clearTimeout(saveTimeout)
-                  unsubscribe()
-                }
-              }}
-            />
-          </div>
-        ) : (
-          /* Note Cards Mode with Infinite Canvas */
-          <>
-            {/* Main content sidebar */}
-            <div className="w-80 border-r border-border/50 p-4 overflow-y-auto bg-muted/10 flex-shrink-0">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Main Context</h3>
-              <Textarea
-                value={mainContent}
-                onChange={(e) => setMainContent(e.target.value)}
-                onBlur={handleSave}
-                placeholder="Write the main idea and context here..."
-                className="min-h-[300px] resize-none border-border/50"
-              />
-            </div>
-
-            {/* Infinite Canvas for Note Cards */}
-            <div
-              ref={canvasRef}
-              className={cn(
-                "flex-1 relative overflow-hidden cursor-grab",
-                "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)] [background-size:20px_20px]",
-                isPanning && "cursor-grabbing"
-              )}
-              onMouseDown={handleCanvasMouseDown}
-              onMouseMove={handleCardMouseMove}
-              onMouseUp={handleCardMouseUp}
-              onMouseLeave={handleCardMouseUp}
-            >
-              {/* Zoom info */}
-              <div className="absolute top-3 left-3 z-10 text-[10px] text-muted-foreground bg-background/80 px-2 py-1 rounded">
-                Drag to pan • Zoom: {Math.round(zoom * 100)}%
-              </div>
-
-              {/* Canvas content with transform */}
-              <div
-                className="canvas-bg absolute inset-0"
-                style={{
-                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                  transformOrigin: '0 0',
-                }}
+        {/* Canvas with drawing + floating note cards */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Drawing toolbar */}
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-border/30 bg-muted/20">
+            <div className="flex items-center gap-1 bg-background rounded-lg p-1">
+              <Button
+                variant={drawTool === 'pen' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setDrawTool('pen')}
               >
-                {cards.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center">
-                      <StickyNote className="size-12 text-muted-foreground/20 mx-auto mb-4" />
-                      <p className="text-sm text-muted-foreground">Click "Add Note" to create note cards</p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">Or switch to Canvas mode for drawing</p>
-                    </div>
-                  </div>
-                )}
-
-                {cards.map((card) => (
-                  <div
-                    key={card.id}
-                    className={cn(
-                      "absolute rounded-lg shadow-lg transition-shadow cursor-pointer",
-                      selectedCardId === card.id ? "ring-2 ring-primary shadow-xl z-50" : "z-10",
-                      isDragging && selectedCardId === card.id ? "cursor-grabbing" : "cursor-grab"
-                    )}
-                    style={{
-                      left: card.x,
-                      top: card.y,
-                      width: card.width,
-                      height: card.height,
-                      backgroundColor: card.color,
-                      borderWidth: 2,
-                      borderColor: card.borderColor,
-                    }}
-                    onMouseDown={(e) => handleCardMouseDown(e, card.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Card header */}
-                    <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: card.borderColor + '40' }}>
-                      <div className="flex items-center gap-2 flex-1">
-                        <Move className="size-3 text-muted-foreground cursor-grab" />
-                        <Input
-                          value={card.heading}
-                          onChange={(e) => handleUpdateCardHeading(card.id, e.target.value)}
-                          onBlur={handleSave}
-                          placeholder="Note heading..."
-                          className="h-6 text-sm font-medium bg-transparent border-none p-0 focus-visible:ring-0"
-                        />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {/* Color picker */}
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-                              <Palette className="size-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-2" align="end">
-                            <div className="grid grid-cols-4 gap-1">
-                              {CARD_COLORS.map((c) => (
-                                <button
-                                  key={c.name}
-                                  className={cn(
-                                    "size-6 rounded border-2 transition-transform hover:scale-110",
-                                    card.color === c.value && "ring-2 ring-primary"
-                                  )}
-                                  style={{ backgroundColor: c.value, borderColor: c.border }}
-                                  onClick={() => {
-                                    handleUpdateCardColor(card.id, c.value, c.border)
-                                    handleSave()
-                                  }}
-                                  title={c.name}
-                                />
-                              ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 p-0"
-                          onClick={() => handleDeleteCard(card.id)}
-                        >
-                          <X className="size-3" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Card content */}
-                    <Textarea
-                      value={card.note.content}
-                      onChange={(e) => handleUpdateCardContent(card.id, e.target.value)}
-                      onBlur={handleSave}
-                      placeholder="Write note content..."
-                      className="border-none rounded-none resize-none h-[calc(100%-44px)] text-sm focus-visible:ring-0 bg-transparent"
-                      style={{ backgroundColor: 'transparent' }}
-                    />
-
-                    {/* Resize handle */}
-                    <div
-                      className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
-                      onMouseDown={(e) => handleResizeStart(e, card.id)}
-                    >
-                      <svg className="size-3 text-muted-foreground/50 absolute bottom-1 right-1" viewBox="0 0 10 10">
-                        <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                      </svg>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                <Pencil className="size-3" />
+              </Button>
+              <Button
+                variant={drawTool === 'eraser' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setDrawTool('eraser')}
+              >
+                <Eraser className="size-3" />
+              </Button>
+              <Button
+                variant={drawTool === 'line' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setDrawTool('line')}
+              >
+                <Minus className="size-3" />
+              </Button>
             </div>
-          </>
-        )}
+
+            <div className="w-px h-5 bg-border/50" />
+
+            {/* Color picker */}
+            <div className="flex items-center gap-1">
+              {DRAW_COLORS.map(color => (
+                <button
+                  key={color}
+                  className={cn(
+                    "size-5 rounded-full transition-transform hover:scale-110",
+                    drawColor === color && "ring-2 ring-offset-1 ring-primary"
+                  )}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setDrawColor(color)}
+                />
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-border/50" />
+
+            {/* Size picker */}
+            <div className="flex items-center gap-1">
+              {[1, 2, 4, 6].map(size => (
+                <button
+                  key={size}
+                  className={cn(
+                    "size-6 rounded flex items-center justify-center hover:bg-muted",
+                    drawSize === size && "bg-muted ring-1 ring-primary"
+                  )}
+                  onClick={() => setDrawSize(size)}
+                >
+                  <div
+                    className="rounded-full bg-foreground"
+                    style={{ width: size + 2, height: size + 2 }}
+                  />
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-border/50" />
+
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={clearCanvas}>
+              <Trash2 className="size-3" />
+              Clear
+            </Button>
+
+            <div className="flex-1" />
+
+            <span className="text-[10px] text-muted-foreground">
+              Draw on canvas • Drag notes to move • Zoom: {Math.round(zoom * 100)}%
+            </span>
+          </div>
+
+          {/* Canvas area */}
+          <div
+            ref={containerRef}
+            className="flex-1 relative overflow-hidden bg-white"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+            }}
+            onMouseMove={handleCardMouseMove}
+            onMouseUp={handleCardMouseUp}
+            onMouseLeave={() => {
+              handleCardMouseUp()
+              stopDrawing()
+            }}
+          >
+            {/* Drawing canvas */}
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 z-0"
+              style={{ transform: `scale(${zoom})`, transformOrigin: '0 0' }}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+            />
+
+            {/* Floating note cards */}
+            {cards.map((card) => (
+              <div
+                key={card.id}
+                className={cn(
+                  "absolute rounded-lg shadow-lg transition-shadow z-10",
+                  selectedCardId === card.id ? "ring-2 ring-primary shadow-xl z-50" : "",
+                  isDragging && selectedCardId === card.id ? "cursor-grabbing" : "cursor-grab"
+                )}
+                style={{
+                  left: card.x * zoom,
+                  top: card.y * zoom,
+                  width: card.width * zoom,
+                  height: card.height * zoom,
+                  backgroundColor: card.color,
+                  borderWidth: 2,
+                  borderColor: card.borderColor,
+                  transform: `scale(${1})`,
+                }}
+                onMouseDown={(e) => handleCardMouseDown(e, card.id)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Card header */}
+                <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: card.borderColor + '40' }}>
+                  <div className="flex items-center gap-2 flex-1">
+                    <Move className="size-3 text-muted-foreground cursor-grab" />
+                    <Input
+                      value={card.heading}
+                      onChange={(e) => handleUpdateCardHeading(card.id, e.target.value)}
+                      onBlur={handleSave}
+                      placeholder="Note heading..."
+                      className="h-6 text-sm font-medium bg-transparent border-none p-0 focus-visible:ring-0"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                          <Palette className="size-3" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="grid grid-cols-4 gap-1">
+                          {CARD_COLORS.map((c) => (
+                            <button
+                              key={c.name}
+                              className={cn(
+                                "size-6 rounded border-2 transition-transform hover:scale-110",
+                                card.color === c.value && "ring-2 ring-primary"
+                              )}
+                              style={{ backgroundColor: c.value, borderColor: c.border }}
+                              onClick={() => {
+                                handleUpdateCardColor(card.id, c.value, c.border)
+                                handleSave()
+                              }}
+                              title={c.name}
+                            />
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={() => handleDeleteCard(card.id)}
+                    >
+                      <X className="size-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Card content */}
+                <Textarea
+                  value={card.note.content}
+                  onChange={(e) => handleUpdateCardContent(card.id, e.target.value)}
+                  onBlur={handleSave}
+                  placeholder="Write note content..."
+                  className="border-none rounded-none resize-none h-[calc(100%-44px)] text-sm focus-visible:ring-0 bg-transparent"
+                  style={{ backgroundColor: 'transparent' }}
+                />
+
+                {/* Resize handle */}
+                <div
+                  className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+                  onMouseDown={(e) => handleResizeStart(e, card.id)}
+                >
+                  <svg className="size-3 text-muted-foreground/50 absolute bottom-1 right-1" viewBox="0 0 10 10">
+                    <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Convert to Task Dialog */}

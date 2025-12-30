@@ -8,8 +8,8 @@ export type StorageBackend = 'localstorage' | 'mongodb';
 
 // Get configured storage backend
 export const getStorageBackend = (): StorageBackend => {
-  const backend = import.meta.env.VITE_STORAGE_BACKEND as StorageBackend;
-  return backend || 'localstorage';
+  const backend = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_STORAGE_BACKEND : undefined) || (import.meta as any).env?.VITE_STORAGE_BACKEND;
+  return (backend as StorageBackend) || 'localstorage';
 };
 
 let storageInstance: IDataStorage | null = null;

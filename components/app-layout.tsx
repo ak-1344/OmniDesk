@@ -1,8 +1,8 @@
 "use client"
 
 import type * as React from "react"
-import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { useState, useEffect, useMemo, useCallback } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -13,9 +13,9 @@ import {
   TerminalIcon,
   Trash2,
   Settings,
-  Plus,
   PanelLeft,
   SearchIcon,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,8 +44,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { useApp } from "@/context/AppContext"
+import { cn } from "@/lib/utils"
 
 const navigationItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -55,9 +61,21 @@ const navigationItems = [
   { icon: Trash2, label: "Trash", href: "/trash" },
 ]
 
+interface SearchResult {
+  id: string
+  title: string
+  type: 'task' | 'idea' | 'event'
+  href: string
+  description?: string
+  domain?: { name: string; color: string }
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [terminalOpen, setTerminalOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const pathname = usePathname()
+  const router = useRouter()
   const { state } = useApp()
 
   // Get user info from settings
@@ -65,23 +83,84 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const userEmail = state.settings.user?.email || ''
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "`") {
         e.preventDefault()
         setTerminalOpen((prev) => !prev)
       }
+      // Cmd/Ctrl + K for search
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setSearchOpen((prev) => !prev)
+      }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
 
+  // Search results
+  const searchResults = useMemo<SearchResult[]>(() => {
+    if (!searchQuery.trim()) return []
+    const query = searchQuery.toLowerCase()
+
+    const results: SearchResult[] = []
+
+    // Search tasks
+    state.tasks.forEach(task => {
+      if (task.title.toLowerCase().includes(query) || task.description?.toLowerCase().includes(query)) {
+        const domain = state.domains.find(d => d.id === task.domainId)
+        results.push({
+          id: task.id,
+          title: task.title,
+          type: 'task',
+          href: `/tasks/${task.id}`,
+          description: task.description,
+          domain: domain ? { name: domain.name, color: domain.color } : undefined,
+        })
+      }
+    })
+
+    // Search ideas
+    state.ideas.forEach(idea => {
+      if (idea.title.toLowerCase().includes(query)) {
+        results.push({
+          id: idea.id,
+          title: idea.title,
+          type: 'idea',
+          href: `/ideas/${idea.id}`,
+        })
+      }
+    })
+
+    // Search events
+    state.events.forEach(event => {
+      if (event.title.toLowerCase().includes(query)) {
+        results.push({
+          id: event.id,
+          title: event.title,
+          type: 'event',
+          href: `/calendar`,
+        })
+      }
+    })
+
+    return results.slice(0, 10) // Limit to 10 results
+  }, [searchQuery, state.tasks, state.ideas, state.events, state.domains])
+
+  const handleResultClick = useCallback((href: string) => {
+    setSearchOpen(false)
+    setSearchQuery("")
+    router.push(href)
+  }, [router])
+
   // Determine page title based on current route
   const getPageContext = () => {
     if (pathname === "/dashboard") return { title: `Welcome, ${userName}`, action: null }
-    if (pathname === "/ideas") return { title: "Ideas", action: "New Idea" }
+    if (pathname === "/ideas") return { title: "Ideas", action: null }
     if (pathname?.startsWith("/ideas/")) return { title: "Idea", action: null }
-    if (pathname === "/tasks") return { title: "Tasks", action: "New Task" }
+    if (pathname === "/tasks") return { title: "Tasks", action: null }
     if (pathname?.startsWith("/tasks/")) return { title: "Task", action: null }
     if (pathname === "/calendar") return { title: "Calendar", action: null }
     if (pathname === "/trash") return { title: "Trash", action: null }
@@ -89,7 +168,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return { title: "Workspace", action: null }
   }
 
-  const { title, action } = getPageContext()
+  const { title } = getPageContext()
 
   return (
     <SidebarProvider>
@@ -158,17 +237,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <h1 className="text-xl font-medium tracking-tight">{title}</h1>
 
               <div className="flex items-center gap-3">
-                <div className="relative hidden sm:block">
-                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                  <Input placeholder="Search..." className="pl-9 h-8 w-[200px] text-sm bg-muted/50 border-border/50" />
-                </div>
-
-                {action && (
-                  <Button size="sm" className="gap-1.5 h-8">
-                    <Plus className="size-3.5" />
-                    <span className="hidden sm:inline">{action}</span>
-                  </Button>
-                )}
+                {/* Search button */}
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="relative hidden sm:flex items-center gap-2 h-8 w-[200px] text-sm bg-muted/50 border border-border/50 rounded-md px-3 text-muted-foreground hover:bg-muted/80 transition-colors"
+                >
+                  <SearchIcon className="size-3.5" />
+                  <span className="flex-1 text-left">Search...</span>
+                  <kbd className="text-[10px] bg-background/50 px-1.5 py-0.5 rounded border border-border/50">⌘K</kbd>
+                </button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -214,6 +291,79 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </main>
         </SidebarInset>
       </div>
+
+      {/* Search Dialog */}
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
+            <SearchIcon className="size-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks, ideas, events..."
+              className="flex-1 border-none bg-transparent focus-visible:ring-0 p-0 h-auto text-base"
+              autoFocus
+            />
+            {searchQuery && (
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setSearchQuery("")}>
+                <X className="size-3" />
+              </Button>
+            )}
+          </div>
+
+          <div className="max-h-[300px] overflow-y-auto">
+            {searchQuery.trim() ? (
+              searchResults.length > 0 ? (
+                <div className="py-2">
+                  {searchResults.map((result) => (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      onClick={() => handleResultClick(result.href)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className={cn(
+                        "size-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                        result.type === 'task' && "bg-blue-500/10",
+                        result.type === 'idea' && "bg-yellow-500/10",
+                        result.type === 'event' && "bg-green-500/10",
+                      )}>
+                        {result.type === 'task' && <CheckSquare className="size-4 text-blue-500" />}
+                        {result.type === 'idea' && <Lightbulb className="size-4 text-yellow-500" />}
+                        {result.type === 'event' && <CalendarIcon className="size-4 text-green-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{result.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="secondary" className="text-[9px] h-4 px-1 capitalize">{result.type}</Badge>
+                          {result.domain && (
+                            <div className="flex items-center gap-1">
+                              <div className="size-2 rounded-full" style={{ backgroundColor: result.domain.color }} />
+                              <span className="text-[10px] text-muted-foreground">{result.domain.name}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No results found for "{searchQuery}"</p>
+                </div>
+              )
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-sm text-muted-foreground">Start typing to search...</p>
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 py-2 border-t border-border/50 bg-muted/30 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>Press <kbd className="px-1 py-0.5 bg-background rounded border">↵</kbd> to select</span>
+            <span>Press <kbd className="px-1 py-0.5 bg-background rounded border">ESC</kbd> to close</span>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   )
 }

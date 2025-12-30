@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Lightbulb, ChevronRight, Circle, Clock, CheckCircle2, Plus, Filter, GripVertical } from "lucide-react"
+import { Lightbulb, ChevronRight, Clock, CheckCircle2, Plus, Filter, GripVertical, Sparkles, Target, Folder, TrendingUp } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/context/AppContext"
 import { formatDistanceToNow } from "date-fns"
@@ -22,6 +21,17 @@ export default function DashboardPage() {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
   const [selectedDomain, setSelectedDomain] = useState<string>("all")
   const [selectedState, setSelectedState] = useState<string>("all")
+
+  // Get user name for greeting
+  const userName = state.settings.user?.name || "there"
+
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return "Good morning"
+    if (hour < 18) return "Good afternoon"
+    return "Good evening"
+  }
 
   // Get kanban columns from settings
   const kanbanColumns = state.settings.kanbanColumns || [
@@ -112,45 +122,109 @@ export default function DashboardPage() {
 
   const sortedColumns = [...kanbanColumns].sort((a, b) => a.order - b.order)
 
+  // Stats calculations
+  const activeTasksCount = state.tasks.filter(t => t.state !== 'completed').length
+  const completedTasksCount = state.tasks.filter(t => t.state === 'completed').length
+
   return (
     <div className="h-full w-full overflow-auto bg-background">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Filters */}
-        <div className="flex items-center justify-end gap-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Filter className="size-3" />
-            <span>Filter:</span>
+        {/* Greeting & Stats - NOW AT TOP */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold flex items-center gap-2">
+                <Sparkles className="size-6 text-primary" />
+                {getGreeting()}, {userName}!
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Here's your overview for today</p>
+            </div>
+            {/* Filters */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Filter className="size-3" />
+                <span>Filter:</span>
+              </div>
+              <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                <SelectTrigger className="w-[130px] h-8 text-xs">
+                  <SelectValue placeholder="All Domains" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Domains</SelectItem>
+                  {state.domains.map(domain => (
+                    <SelectItem key={domain.id} value={domain.id}>
+                      <div className="flex items-center gap-2">
+                        <div className="size-2 rounded-full" style={{ backgroundColor: domain.color }} />
+                        {domain.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                <SelectTrigger className="w-[110px] h-8 text-xs">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  {sortedColumns.map(col => (
+                    <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <Select value={selectedDomain} onValueChange={setSelectedDomain}>
-            <SelectTrigger className="w-[130px] h-8 text-xs">
-              <SelectValue placeholder="All Domains" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Domains</SelectItem>
-              {state.domains.map(domain => (
-                <SelectItem key={domain.id} value={domain.id}>
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full" style={{ backgroundColor: domain.color }} />
-                    {domain.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedState} onValueChange={setSelectedState}>
-            <SelectTrigger className="w-[110px] h-8 text-xs">
-              <SelectValue placeholder="All States" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All States</SelectItem>
-              {sortedColumns.map(col => (
-                <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Global Kanban - NOW FIRST */}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="border-border/40 bg-gradient-to-br from-primary/5 to-primary/10">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold text-primary">{state.ideas.length}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Ideas</div>
+                  </div>
+                  <Lightbulb className="size-8 text-primary/30" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/40 bg-gradient-to-br from-orange-500/5 to-orange-500/10">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold text-orange-500">{activeTasksCount}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Active Tasks</div>
+                  </div>
+                  <Target className="size-8 text-orange-500/30" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/40 bg-gradient-to-br from-green-500/5 to-green-500/10">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold text-green-500">{completedTasksCount}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Completed</div>
+                  </div>
+                  <CheckCircle2 className="size-8 text-green-500/30" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/40 bg-gradient-to-br from-purple-500/5 to-purple-500/10">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold text-purple-500">{state.domains.length}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Domains</div>
+                  </div>
+                  <Folder className="size-8 text-purple-500/30" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Global Kanban */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -306,34 +380,6 @@ export default function DashboardPage() {
             </div>
           </section>
         </div>
-
-        {/* Stats */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-          <Card className="border-border/40">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{state.ideas.length}</div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Ideas</div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/40">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-500">{state.tasks.filter(t => t.state !== 'completed').length}</div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Active</div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/40">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-500">{state.tasks.filter(t => t.state === 'completed').length}</div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Completed</div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/40">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-500">{state.domains.length}</div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Domains</div>
-            </CardContent>
-          </Card>
-        </section>
       </div>
     </div>
   )

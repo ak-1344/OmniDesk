@@ -11,7 +11,7 @@ import type {
   TrashItem,
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) || (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
 
 export class MongoDBAdapter implements IDataStorage {
   private userId: string = 'default-user';
@@ -110,7 +110,7 @@ export class MongoDBAdapter implements IDataStorage {
     // Find which task contains this subtask
     const tasks = await this.getTasks();
     const task = tasks.find(t => t.subtasks.some(s => s.id === subtaskId));
-    
+
     if (!task) throw new Error('Subtask not found');
 
     await this.fetchAPI(`/subtasks/${task.id}/${subtaskId}`, {
@@ -120,7 +120,7 @@ export class MongoDBAdapter implements IDataStorage {
 
     const updatedTask = await this.getTask(task.id);
     const updatedSubtask = updatedTask?.subtasks.find(s => s.id === subtaskId);
-    
+
     if (!updatedSubtask) throw new Error('Subtask not found after update');
     return updatedSubtask;
   }

@@ -4,8 +4,8 @@ import './InfiniteCanvas.css';
 
 interface InfiniteCanvasProps {
   ideaId: string;
-  initialData?: any;
-  onSave?: (snapshot: any) => void;
+  initialData?: unknown;
+  onSave?: (snapshot: unknown) => void;
   readOnly?: boolean;
 }
 
@@ -15,12 +15,17 @@ export const InfiniteCanvas = ({ ideaId, initialData, onSave, readOnly = false }
       <Tldraw
         onMount={(editor) => {
           console.log('Canvas mounted for idea:', ideaId);
-          
+
           // Load initial data if provided
           if (initialData && typeof initialData === 'object') {
             try {
               console.log('Loading initial canvas data...');
-              editor.store.loadSnapshot(initialData);
+              // Use compatible API methods
+              if (typeof (editor.store as any).loadStoreSnapshot === 'function') {
+                (editor.store as any).loadStoreSnapshot(initialData);
+              } else if (typeof (editor as any).loadSnapshot === 'function') {
+                (editor as any).loadSnapshot(initialData);
+              }
             } catch (error) {
               console.warn('Could not load canvas data:', error);
             }
@@ -28,14 +33,22 @@ export const InfiniteCanvas = ({ ideaId, initialData, onSave, readOnly = false }
 
           // Setup auto-save on editor changes
           if (onSave && !readOnly) {
-            let saveTimeout: NodeJS.Timeout;
-            
+            let saveTimeout: ReturnType<typeof setTimeout>;
+
             const unsubscribe = editor.store.listen(() => {
               // Debounce saves
               clearTimeout(saveTimeout);
               saveTimeout = setTimeout(() => {
                 try {
-                  const snapshot = editor.store.getSnapshot();
+                  // Use compatible API methods
+                  let snapshot: unknown;
+                  if (typeof (editor.store as any).getStoreSnapshot === 'function') {
+                    snapshot = (editor.store as any).getStoreSnapshot();
+                  } else if (typeof (editor as any).getSnapshot === 'function') {
+                    snapshot = (editor as any).getSnapshot();
+                  } else {
+                    snapshot = (editor.store as any).serialize?.() || {};
+                  }
                   console.log('Saving canvas state...');
                   onSave(snapshot);
                 } catch (error) {
