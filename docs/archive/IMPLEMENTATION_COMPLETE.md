@@ -294,7 +294,7 @@ NODE_ENV=development
 
 ### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
 ## 🎯 MVP Completion Status

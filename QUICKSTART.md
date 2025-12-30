@@ -36,7 +36,7 @@ NODE_ENV=development
 **Frontend (.env):**
 Create `/workspaces/OmniDesk/.env`:
 ```env
-VITE_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
 ### 3. Start MongoDB

@@ -157,7 +157,7 @@ interface Task {
 | **Frontend** |
 | React 19 | ✅ | Latest version |
 | TypeScript | ✅ | Strict mode |
-| Vite | ✅ | Fast dev server |
+| Next.js | ✅ | Fast dev server |
 | Routing | ✅ | React Router v7 |
 | **Ideas** |
 | Create/Edit/Delete | ✅ | Full CRUD |

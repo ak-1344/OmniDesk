@@ -31,7 +31,7 @@ Welcome to the OmniDesk documentation! This guide will help you understand the a
 
 ## Overview
 
-OmniDesk is a modern productivity application built with React, TypeScript, and Vite. It provides a comprehensive solution for managing tasks, ideas, calendar events, and more. Data can be stored locally in your browser or synced to the cloud using Supabase.
+OmniDesk is a modern productivity application built with React, TypeScript, and Next.js. It provides a comprehensive solution for managing tasks, ideas, calendar events, and more. Data can be stored locally in your browser or synced to the cloud using Supabase.
 
 ### Key Features
 - **Task Management**: Organize tasks with domains, states, deadlines, and enhanced subtasks (with descriptions and deadlines)
@@ -46,7 +46,7 @@ OmniDesk is a modern productivity application built with React, TypeScript, and 
 ### Technology Stack
 - **React 19**: Modern React with hooks and context
 - **TypeScript**: Type-safe development
-- **Vite**: Fast build tooling and HMR
+- **Next.js**: Fast build tooling and HMR
 - **React Router**: Client-side routing
 - **CSS3**: Modern styling with glassmorphism effects
 - **Supabase** (Optional): PostgreSQL database with real-time capabilities and authentication

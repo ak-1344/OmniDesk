@@ -189,7 +189,7 @@
 - [x] React Router 7.11.0
 - [x] @hello-pangea/dnd 18.0.1 (drag-drop)
 - [x] @tldraw/tldraw 4.2.1 (canvas)
-- [x] Vite 7.2.4 (build tool)
+- [x] Next.js 7.2.4 (build tool)
 
 ### Backend
 - [x] Express 4.18.2

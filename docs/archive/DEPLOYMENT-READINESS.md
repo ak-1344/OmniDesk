@@ -99,13 +99,13 @@ RATE_LIMIT_MAX_REQUESTS=100   # Max 100 requests per window
 **Frontend `.env`:**
 ```env
 # API Configuration
-VITE_API_URL=https://api.omnidesk.example.com/api
+NEXT_PUBLIC_API_URL=https://api.omnidesk.example.com/api
 
 # Storage Backend
-VITE_STORAGE_TYPE=mongodb
+NEXT_PUBLIC_STORAGE_TYPE=mongodb
 
 # Optional: Analytics
-VITE_GA_TRACKING_ID=UA-XXXXXXXXX-X
+NEXT_PUBLIC_GA_TRACKING_ID=UA-XXXXXXXXX-X
 ```
 
 #### 3. Database Initialization
@@ -130,10 +130,10 @@ npm run seed
 
 #### 1. Build Configuration
 
-**Vite Config Optimizations:**
+**Next.js Config Optimizations:**
 
 ```javascript
-// vite.config.ts
+// next.config.ts
 export default defineConfig({
   build: {
     rollupOptions: {
@@ -202,17 +202,17 @@ vercel
 vercel --prod
 
 # Set environment variables
-vercel env add VITE_API_URL production
+vercel env add NEXT_PUBLIC_API_URL production
 # Enter: https://omnidesk-api.onrender.com/api
 
-vercel env add VITE_STORAGE_TYPE production
+vercel env add NEXT_PUBLIC_STORAGE_TYPE production
 # Enter: mongodb
 ```
 
 **Vercel Dashboard Settings:**
 - Build Command: `npm run build`
 - Output Directory: `dist`
-- Framework Preset: Vite
+- Framework Preset: Next.js
 - Node Version: 20.x
 
 #### Backend Deployment (Render)
@@ -529,7 +529,7 @@ db.calendar_events.createIndex({ user_id: 1, start_date: 1 });
 
 ```bash
 # Install testing libraries
-npm install --save-dev @testing-library/react @testing-library/jest-dom vitest
+npm install --save-dev @testing-library/react @testing-library/jest-dom nextst
 
 # Run tests
 npm test

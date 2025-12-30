@@ -163,8 +163,8 @@ Domains are categories for organizing your tasks (e.g., College, Work, Personal)
 rm -rf node_modules package-lock.json
 npm install
 
-# Clear Vite cache
-rm -rf .vite
+# Clear Next.js cache
+rm -rf .next
 npm run build
 ```
 

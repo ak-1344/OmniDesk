@@ -81,8 +81,8 @@ npm install
 cp .env.example .env
 
 # The default .env should work:
-# VITE_API_URL=http://localhost:3001/api
-# VITE_STORAGE_BACKEND=mongodb
+# NEXT_PUBLIC_API_URL=http://localhost:3001/api
+# NEXT_PUBLIC_STORAGE_BACKEND=mongodb
 
 # Start the frontend development server
 npm run dev
@@ -193,7 +193,7 @@ Using MongoDB API storage backend
 
 **Solutions:**
 1. Check backend is running on port 3001
-2. Verify `.env` has correct `VITE_API_URL=http://localhost:3001/api`
+2. Verify `.env` has correct `NEXT_PUBLIC_API_URL=http://localhost:3001/api`
 3. Check CORS settings in `backend/src/server.ts`
 4. Restart both frontend and backend
 
@@ -297,14 +297,14 @@ FRONTEND_URL=http://localhost:5173
 
 ```bash
 # Backend API endpoint
-VITE_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
 # Storage backend ('mongodb' or 'localstorage')
-VITE_STORAGE_BACKEND=mongodb
+NEXT_PUBLIC_STORAGE_BACKEND=mongodb
 
 # Offline mode (optional)
-VITE_ENABLE_OFFLINE_MODE=true
-VITE_SYNC_INTERVAL_MS=30000
+NEXT_PUBLIC_ENABLE_OFFLINE_MODE=true
+NEXT_PUBLIC_SYNC_INTERVAL_MS=30000
 ```
 
 ## Production Deployment

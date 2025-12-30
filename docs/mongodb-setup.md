@@ -8,7 +8,7 @@ This guide walks you through setting up the MongoDB backend API server for OmniD
 ┌───────────────────┐         HTTP/REST           ┌────────────────────────┐
 │                   │ ◄────────────────────────►  │                        │
 │  Frontend (React) │                             │   Backend (Express)    │
-│  Vite + TypeScript│                             │  Node.js + TypeScript  │
+│  Next.js + TypeScript│                             │  Node.js + TypeScript  │
 │                   │                             │                        │
 └───────────────────┘                             └────────────────────────┘
                                                         │
@@ -156,8 +156,8 @@ npm start
 
 3. **Configure environment variables** (`.env.local`):
    ```env
-   VITE_API_URL=http://localhost:3001/api
-   VITE_STORAGE_BACKEND=mongodb
+   NEXT_PUBLIC_API_URL=http://localhost:3001/api
+   NEXT_PUBLIC_STORAGE_BACKEND=mongodb
    ```
 
 4. **Start frontend**:
@@ -230,13 +230,13 @@ The backend creates optimized indexes on startup:
 **Solutions**:
 1. Check `FRONTEND_URL` in backend `.env` matches your frontend URL
 2. Ensure backend is running (`npm run dev` in backend directory)
-3. Verify `VITE_API_URL` in frontend `.env.local`
+3. Verify `NEXT_PUBLIC_API_URL` in frontend `.env.local`
 
 **Error**: "Failed to fetch"
 
 **Solutions**:
 1. Check backend is running: `curl http://localhost:3001/health`
-2. Verify `VITE_API_URL` in `.env.local`
+2. Verify `NEXT_PUBLIC_API_URL` in `.env.local`
 3. Check browser Network tab for actual error
 
 ### Data not persisting
@@ -244,7 +244,7 @@ The backend creates optimized indexes on startup:
 **Problem**: Data disappears after refresh
 
 **Solutions**:
-1. Verify `VITE_STORAGE_BACKEND=mongodb` in `.env.local`
+1. Verify `NEXT_PUBLIC_STORAGE_BACKEND=mongodb` in `.env.local`
 2. Check browser console for storage backend message
 3. Verify MongoDB connection in backend logs
 
@@ -310,8 +310,8 @@ FRONTEND_URL=https://your-frontend-domain.com
 
 Update `.env.production`:
 ```env
-VITE_API_URL=https://your-backend-domain.com/api
-VITE_STORAGE_BACKEND=mongodb
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api
+NEXT_PUBLIC_STORAGE_BACKEND=mongodb
 ```
 
 ## Security Considerations
@@ -409,4 +409,4 @@ The application now supports dual storage:
 - **LocalStorage**: Default, works offline, no setup
 - **MongoDB**: Cloud sync, multi-device, requires backend
 
-Switch between them by changing `VITE_STORAGE_BACKEND` in `.env.local`!
+Switch between them by changing `NEXT_PUBLIC_STORAGE_BACKEND` in `.env.local`!

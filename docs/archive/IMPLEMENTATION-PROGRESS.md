@@ -38,7 +38,7 @@
 
 **Technical Stack Implemented:**
 - Backend: Node.js, Express, TypeScript, MongoDB
-- Frontend: React 19, TypeScript, Vite
+- Frontend: React 19, TypeScript, Next.js
 - Data Layer: MongoDB with proper schemas and indexes
 
 ---
@@ -302,7 +302,7 @@ OmniDesk follows these core principles (from `idea.md`):
 - **Drag & Drop**: @hello-pangea/dnd
 - **Backend**: Express + MongoDB
 - **Frontend**: React 19 + TypeScript
-- **Build Tool**: Vite
+- **Build Tool**: Next.js
 - **Styling**: CSS with dark theme
 
 ---

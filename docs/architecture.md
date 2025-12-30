@@ -186,7 +186,7 @@ Modern glass-like effects using:
 5. **Local Storage**: Efficient serialization
 
 ### Bundle Size
-- Tree-shaking with Vite
+- Tree-shaking with Next.js
 - Minimal dependencies
 - No heavy libraries
 

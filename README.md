@@ -92,7 +92,7 @@ OmniDesk/
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React 19 + TypeScript + Vite
+- **Frontend**: React 19 + TypeScript + Next.js
 - **Backend**: Node.js + Express + TypeScript
 - **Database**: MongoDB
 - **Canvas**: TLDraw (Excalidraw-like)

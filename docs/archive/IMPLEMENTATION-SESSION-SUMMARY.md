@@ -148,7 +148,7 @@
 - JWT ready (not yet implemented)
 
 **Frontend:**
-- React 19 + TypeScript + Vite
+- React 19 + TypeScript + Next.js
 - TLDraw v4.2.1 (infinite canvas)
 - @hello-pangea/dnd (for future Kanban)
 - React Router v7
@@ -371,7 +371,7 @@ The MVP+ will be considered complete when:
 - **MongoDB** - Reliable database
 - **React 19** - Solid foundation
 - **TypeScript** - Type safety
-- **Vite** - Fast dev experience
+- **Next.js** - Fast dev experience
 
 ---
 

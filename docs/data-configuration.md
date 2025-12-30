@@ -412,13 +412,13 @@ For Supabase integration, create a `.env.local` file:
 
 ```env
 # Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Optional: Storage Configuration
-VITE_STORAGE_BACKEND=supabase  # or 'localstorage'
-VITE_ENABLE_OFFLINE_MODE=true
-VITE_SYNC_INTERVAL_MS=30000    # 30 seconds
+NEXT_PUBLIC_STORAGE_BACKEND=supabase  # or 'localstorage'
+NEXT_PUBLIC_ENABLE_OFFLINE_MODE=true
+NEXT_PUBLIC_SYNC_INTERVAL_MS=30000    # 30 seconds
 ```
 
 ### Supabase Project Configuration
@@ -542,7 +542,7 @@ Recommended limits:
    - Check for JSON serialization errors
 
 2. **Supabase connection issues:**
-   - Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+   - Verify NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
    - Check network connectivity
    - Verify RLS policies allow access
 

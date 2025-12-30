@@ -11,7 +11,7 @@ import type {
   TrashItem,
 } from '@/types';
 
-const API_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) || (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) || process.env?.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export class MongoDBAdapter implements IDataStorage {
   private userId: string = 'default-user';
