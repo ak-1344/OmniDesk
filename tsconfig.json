@@ -36,6 +36,7 @@
   ],
   "exclude": [
     "node_modules",
-    "src_backup_vite"
+    "src_backup_vite",
+    "backend"
   ]
 }
