@@ -3,10 +3,10 @@ logs
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
@@ -14,6 +14,8 @@ dist-ssr
 
 # Environment variables
 .env
+.env.*
+!.env.example
 backend/.env
 
 # Editor directories and files
@@ -26,4 +28,11 @@ backend/.env
 *.njsproj
 *.sln
 *.sw?
-*.next
+
+# Next.js
+.next/
+out/
+build/
+
+# Typescript
+*.tsbuildinfo

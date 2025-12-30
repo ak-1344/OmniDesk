@@ -16,6 +16,7 @@ import {
   PanelLeft,
   SearchIcon,
   X,
+  BookOpen,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -213,6 +214,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
           <SidebarFooter className="p-4">
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="User Guide">
+                  <Link href="/user-guide">
+                    <BookOpen className="size-4" />
+                    <span className="group-data-[collapsible=icon]:hidden">User Guide</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Settings">
                   <Link href="/settings">
