@@ -10,13 +10,19 @@ const defaultDomains = [
   { name: 'Personal', color: '#8B5CF6', description: 'Personal projects and hobbies' },
 ];
 
-// Default task states (buckets) - based on mental states, not rigid workflows
-const defaultTaskStates = [
-  { name: 'Gotta Start', color: '#FCD34D', description: 'Things I need to begin', order: 1, isFinal: false },
-  { name: 'In Progress', color: '#60A5FA', description: 'Currently working on', order: 2, isFinal: false },
-  { name: 'Nearly Done', color: '#34D399', description: 'Almost finished', order: 3, isFinal: false },
-  { name: 'Paused', color: '#F59E0B', description: 'On hold for now', order: 4, isFinal: false },
-  { name: 'Completed', color: '#10B981', description: 'Finished and done', order: 5, isFinal: true },
+// Default kanban columns for tasks
+const defaultKanbanColumns = [
+  { id: 'gotta-start', label: 'Exploring', color: '#3b82f6', order: 0 },
+  { id: 'paused', label: 'Shaping', color: '#8b5cf6', order: 1 },
+  { id: 'in-progress', label: 'Doing', color: '#f97316', order: 2 },
+  { id: 'completed', label: 'Done', color: '#22c55e', order: 3 },
+];
+
+// Default kanban columns for subtasks
+const defaultSubtaskKanbanColumns = [
+  { id: 'todo', label: 'To Do', color: '#6b7280', order: 0 },
+  { id: 'in-progress', label: 'In Progress', color: '#f97316', order: 1 },
+  { id: 'completed', label: 'Done', color: '#22c55e', order: 2 },
 ];
 
 async function seedDatabase() {
@@ -30,6 +36,7 @@ async function seedDatabase() {
     const domainsCollection = db.collection('domains');
     const existingDomains = await domainsCollection.countDocuments({ user_id: DEFAULT_USER_ID });
 
+    let domainIds: string[] = [];
     if (existingDomains === 0) {
       const domainsToInsert = defaultDomains.map(domain => ({
         ...domain,
@@ -38,64 +45,70 @@ async function seedDatabase() {
         updated_at: new Date(),
       }));
 
-      await domainsCollection.insertMany(domainsToInsert);
+      const result = await domainsCollection.insertMany(domainsToInsert);
+      domainIds = Object.values(result.insertedIds).map(id => id.toString());
       console.log(`✓ Created ${domainsToInsert.length} default domains`);
     } else {
       console.log(`✓ Domains already exist (${existingDomains} found)`);
+      const domains = await domainsCollection.find({ user_id: DEFAULT_USER_ID }).toArray();
+      domainIds = domains.map(d => d._id.toString());
     }
 
-    // Seed task states (buckets)
-    const bucketsCollection = db.collection('buckets');
-    const existingBuckets = await bucketsCollection.countDocuments({ user_id: DEFAULT_USER_ID });
-
-    if (existingBuckets === 0) {
-      const bucketsToInsert = defaultTaskStates.map(state => ({
-        ...state,
-        user_id: DEFAULT_USER_ID,
-        lifecycle: { status: 'active' },
-        created_at: new Date(),
-        updated_at: new Date(),
-      }));
-
-      await bucketsCollection.insertMany(bucketsToInsert);
-      console.log(`✓ Created ${bucketsToInsert.length} default task states`);
-    } else {
-      console.log(`✓ Task states already exist (${existingBuckets} found)`);
-    }
-
-    // Create default settings
+    // Create default settings with complete schema
     const settingsCollection = db.collection('user_settings');
     const existingSettings = await settingsCollection.findOne({ user_id: DEFAULT_USER_ID });
 
     if (!existingSettings) {
       await settingsCollection.insertOne({
         user_id: DEFAULT_USER_ID,
-        defaults: {
-          domainId: null,
-          bucketId: null,
-        },
-        behavior: {
-          softDeadlines: true,
-          autoArchive: false,
-          allowLooseThoughts: true,
-        },
         theme: 'dark',
-        defaultView: 'dashboard',
-        dateFormat: 'YYYY-MM-DD',
-        weekStartsOn: 'monday',
+        default_view: 'dashboard',
+        date_format: 'YYYY-MM-DD',
+        week_starts_on: 'monday',
         notifications: {
           email: false,
           desktop: true,
           taskReminders: true,
         },
-        trashRetentionDays: 30,
-        lifecycle: { status: 'active' },
+        trash_retention_days: 30,
+        kanban_columns: defaultKanbanColumns,
+        subtask_kanban_columns: defaultSubtaskKanbanColumns,
+        user: {
+          name: 'User',
+          email: '',
+          avatar: '',
+        },
+        domain_order: domainIds,
         created_at: new Date(),
         updated_at: new Date(),
       });
-      console.log('✓ Created default user settings');
+      console.log('✓ Created default user settings (with kanban columns and user profile)');
     } else {
-      console.log('✓ User settings already exist');
+      // Update existing settings with missing fields
+      const updateFields: any = {};
+      if (!existingSettings.kanban_columns) {
+        updateFields.kanban_columns = defaultKanbanColumns;
+      }
+      if (!existingSettings.subtask_kanban_columns) {
+        updateFields.subtask_kanban_columns = defaultSubtaskKanbanColumns;
+      }
+      if (!existingSettings.user) {
+        updateFields.user = { name: 'User', email: '', avatar: '' };
+      }
+      if (!existingSettings.domain_order) {
+        updateFields.domain_order = domainIds;
+      }
+      
+      if (Object.keys(updateFields).length > 0) {
+        updateFields.updated_at = new Date();
+        await settingsCollection.updateOne(
+          { user_id: DEFAULT_USER_ID },
+          { $set: updateFields }
+        );
+        console.log('✓ Updated existing settings with missing fields');
+      } else {
+        console.log('✓ User settings already exist and are complete');
+      }
     }
 
     // Create sample idea to demonstrate the system

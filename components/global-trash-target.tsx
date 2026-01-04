@@ -2,22 +2,45 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
-import { Trash2 } from "lucide-react"
+import { Trash2, RotateCcw, X, ChevronUp, Clock, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useApp } from "@/context/AppContext"
+import { formatDistanceToNow, differenceInDays, addDays } from "date-fns"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function GlobalTrashTarget() {
   const [isOver, setIsOver] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isDraggingGlobal, setIsDraggingGlobal] = useState(false)
-  const { deleteTask, deleteIdea, deleteDomain, trash, restoreFromTrash, state } = useApp()
+  const [showTrashPopover, setShowTrashPopover] = useState(false)
+  const { deleteTask, deleteIdea, deleteDomain, trash, restoreFromTrash, permanentlyDelete, emptyTrash, state } = useApp()
+
+  const retentionDays = state.settings.trashRetentionDays || 30
+
+  // Calculate days until deletion for each item
+  const getExpirationInfo = (deletedAt: string) => {
+    const deleteDate = new Date(deletedAt)
+    const expirationDate = addDays(deleteDate, retentionDays)
+    const daysLeft = differenceInDays(expirationDate, new Date())
+
+    if (daysLeft <= 0) {
+      return { daysLeft: 0, isUrgent: true, label: "Expiring soon" }
+    } else if (daysLeft <= 7) {
+      return { daysLeft, isUrgent: true, label: `${daysLeft}d left` }
+    } else {
+      return { daysLeft, isUrgent: false, label: `${daysLeft}d` }
+    }
+  }
 
   // Listen for any drag events to expand the trash zone
   useEffect(() => {
     const handleDragStart = (e: DragEvent) => {
       setIsDraggingGlobal(true)
       setIsExpanded(true)
+      setShowTrashPopover(false) // Close popover when dragging
     }
 
     const handleDragEnd = () => {
@@ -220,54 +243,209 @@ export function GlobalTrashTarget() {
     })
   }
 
+  const handleRestore = async (id: string) => {
+    const item = trash.find(t => t.id === id)
+    const title = item?.item && 'title' in item.item ? item.item.title : 'Item'
+    await restoreFromTrash(id)
+    toast.success("Restored", { description: `"${title}" has been restored.` })
+  }
+
+  const handlePermanentDelete = async (id: string) => {
+    const item = trash.find(t => t.id === id)
+    const title = item?.item && 'title' in item.item ? item.item.title : 'Item'
+    await permanentlyDelete(id)
+    toast.success("Permanently deleted", { description: `"${title}" has been deleted forever.` })
+  }
+
+  const handleEmptyTrash = async () => {
+    await emptyTrash()
+    toast.success("Trash emptied", { description: "All items have been permanently deleted." })
+    setShowTrashPopover(false)
+  }
+
+  const handleIconClick = () => {
+    if (!isDraggingGlobal && !isExpanded) {
+      setShowTrashPopover(prev => !prev)
+    }
+  }
+
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={cn(
-        "fixed bottom-6 left-6 z-[100] transition-all duration-300 ease-out",
-        "flex items-center justify-center rounded-full",
-        "border-2 border-dashed",
-        // Size changes when dragging
-        isExpanded || isDraggingGlobal
-          ? "size-24 shadow-lg"
-          : "size-12 shadow-sm opacity-50 hover:opacity-100",
-        // Colors based on hover state
-        isOver
-          ? "bg-destructive/20 border-destructive scale-110 shadow-xl shadow-destructive/20"
-          : isDraggingGlobal
-            ? "bg-destructive/5 border-destructive/50 animate-pulse"
-            : "bg-background/90 backdrop-blur-xl border-border hover:border-destructive/50 text-muted-foreground",
+    <>
+      {/* Trash popover */}
+      {showTrashPopover && !isDraggingGlobal && (
+        <div className="fixed bottom-24 right-6 z-[100] w-80 bg-background/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <div className="flex items-center justify-between p-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <Trash2 className="size-4 text-muted-foreground" />
+              <span className="font-medium text-sm">Trash</span>
+              <Badge variant="secondary" className="text-[10px] h-5">{trash.length}</Badge>
+            </div>
+            <div className="flex items-center gap-1">
+              {trash.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 text-xs text-destructive hover:text-destructive"
+                  onClick={handleEmptyTrash}
+                >
+                  Empty All
+                </Button>
+              )}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7"
+                onClick={() => setShowTrashPopover(false)}
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          </div>
+
+          <ScrollArea className="max-h-64">
+            {trash.length === 0 ? (
+              <div className="p-6 text-center">
+                <Trash2 className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">Trash is empty</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  Deleted items appear here for {retentionDays} days
+                </p>
+              </div>
+            ) : (
+              <div className="p-2 space-y-1">
+                {trash.slice(0, 10).map((item) => {
+                  const title = 'title' in item.item ? item.item.title : 'Untitled'
+                  const expiration = getExpirationInfo(item.deletedAt)
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 group transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{title}</p>
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <Badge variant="outline" className="h-4 px-1 text-[9px] capitalize">{item.type}</Badge>
+                          <span className="flex items-center gap-0.5">
+                            <Clock className="size-2.5" />
+                            {formatDistanceToNow(new Date(item.deletedAt), { addSuffix: false })}
+                          </span>
+                          <span className={cn(
+                            "flex items-center gap-0.5",
+                            expiration.isUrgent && "text-orange-500"
+                          )}>
+                            {expiration.isUrgent && <AlertTriangle className="size-2.5" />}
+                            {expiration.label}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => handleRestore(item.id)}
+                          title="Restore"
+                        >
+                          <RotateCcw className="size-3" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 text-destructive hover:text-destructive"
+                          onClick={() => handlePermanentDelete(item.id)}
+                          title="Delete forever"
+                        >
+                          <X className="size-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })}
+                {trash.length > 10 && (
+                  <p className="text-[10px] text-muted-foreground text-center py-2">
+                    +{trash.length - 10} more items
+                  </p>
+                )}
+              </div>
+            )}
+          </ScrollArea>
+
+          <div className="p-2 border-t border-border/50 text-[10px] text-muted-foreground text-center">
+            Items auto-delete after {retentionDays} days
+          </div>
+        </div>
       )}
-      title="Drop items here to move to trash"
-    >
-      <Trash2
+
+      {/* Main trash drop zone - now at bottom-right */}
+      <div
+        onClick={handleIconClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className={cn(
-          "transition-all duration-200",
-          isExpanded || isDraggingGlobal ? "size-10" : "size-5",
-          isOver && "text-destructive animate-bounce"
+          "fixed bottom-6 right-6 z-[100] transition-all duration-300 ease-out cursor-pointer",
+          "flex items-center justify-center rounded-full",
+          "border-2",
+          // Size changes when dragging
+          isExpanded || isDraggingGlobal
+            ? "size-24 shadow-lg border-dashed"
+            : "size-12 shadow-md hover:shadow-lg",
+          // Colors based on state
+          isOver
+            ? "bg-destructive/20 border-destructive scale-110 shadow-xl shadow-destructive/20 border-dashed"
+            : isDraggingGlobal
+              ? "bg-destructive/5 border-destructive/50 animate-pulse border-dashed"
+              : showTrashPopover
+                ? "bg-primary/10 border-primary shadow-lg"
+                : trash.length > 0
+                  ? "bg-background/90 backdrop-blur-xl border-border hover:border-destructive/50"
+                  : "bg-background/90 backdrop-blur-xl border-border/50 opacity-60 hover:opacity-100 hover:border-border",
         )}
-      />
+        title={isDraggingGlobal ? "Drop items here to delete" : "Click to view trash"}
+      >
+        <Trash2
+          className={cn(
+            "transition-all duration-200",
+            isExpanded || isDraggingGlobal ? "size-10" : "size-5",
+            isOver && "text-destructive animate-bounce",
+            showTrashPopover && "text-primary"
+          )}
+        />
 
-      {/* Expanded drop zone indicator */}
-      {(isExpanded || isDraggingGlobal) && (
-        <div className="absolute inset-0 rounded-full animate-ping bg-destructive/10 pointer-events-none" />
-      )}
+        {/* Badge showing trash count */}
+        {trash.length > 0 && !isDraggingGlobal && !isExpanded && (
+          <span className="absolute -top-1 -right-1 size-5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+            {trash.length > 9 ? '9+' : trash.length}
+          </span>
+        )}
 
-      {/* Label when hovering */}
-      {isOver && (
-        <span className="absolute -top-12 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground text-[10px] px-3 py-1.5 tracking-widest uppercase font-bold animate-in fade-in slide-in-from-bottom-2 rounded-lg whitespace-nowrap">
-          Release to Delete
-        </span>
-      )}
+        {/* Expanded drop zone indicator */}
+        {(isExpanded || isDraggingGlobal) && (
+          <div className="absolute inset-0 rounded-full animate-ping bg-destructive/10 pointer-events-none" />
+        )}
 
-      {/* Hint when dragging */}
-      {isDraggingGlobal && !isOver && (
-        <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground text-[9px] px-2 py-1 tracking-wider uppercase animate-in fade-in slide-in-from-bottom-2 rounded whitespace-nowrap">
-          Drop here
-        </span>
-      )}
-    </div>
+        {/* Label when hovering */}
+        {isOver && (
+          <span className="absolute -top-12 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground text-[10px] px-3 py-1.5 tracking-widest uppercase font-bold animate-in fade-in slide-in-from-bottom-2 rounded-lg whitespace-nowrap">
+            Release to Delete
+          </span>
+        )}
+
+        {/* Hint when dragging */}
+        {isDraggingGlobal && !isOver && (
+          <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground text-[9px] px-2 py-1 tracking-wider uppercase animate-in fade-in slide-in-from-bottom-2 rounded whitespace-nowrap">
+            Drop here
+          </span>
+        )}
+
+        {/* Popover toggle indicator */}
+        {!isDraggingGlobal && !isExpanded && (
+          <ChevronUp className={cn(
+            "absolute -top-1 size-3 text-muted-foreground transition-transform",
+            showTrashPopover && "rotate-180"
+          )} />
+        )}
+      </div>
+    </>
   )
 }
