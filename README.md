@@ -8,6 +8,17 @@ OmniDesk is a modern productivity platform that respects how humans actually wor
 
 ![Dashboard](https://github.com/user-attachments/assets/4bdc7195-9b4d-44d9-ab69-fb1cb81ce317)
 
+## 📚 Documentation
+
+**Complete documentation is available in the [/docs](./docs) folder:**
+
+- **[Setup Guide](./docs/SETUP.md)** - Installation and configuration
+- **[Architecture](./docs/ARCHITECTURE.md)** - System design and patterns
+- **[API Reference](./docs/API_REFERENCE.md)** - Backend API documentation
+- **[Development Guide](./docs/DEVELOPMENT.md)** - Coding standards and workflows
+- **[Handover Document](./docs/HANDOVER.md)** - Project state and production readiness
+- **[User Guide](./docs/UserGuide.md)** - End-user documentation
+
 ## ✨ Core Philosophy
 
 - **Thinking ≠ Doing**: Not every thought needs to become a task
@@ -43,95 +54,156 @@ OmniDesk is a modern productivity platform that respects how humans actually wor
 ## 🎯 Quick Start
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 18+ and npm
 - Docker (for MongoDB)
 
 ### Installation
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/ak-1344/OmniDesk.git
 cd OmniDesk
 
-# Start MongoDB
+# 2. Start MongoDB
 docker run -d -p 27017:27017 --name omnidesk-mongodb mongo:latest
 
-# Set up backend
+# 3. Set up backend
 cd backend
 npm install
-cp .env.example .env
-npm run seed  # Populate default data
-npm run dev   # Start on port 3001
+npm run seed    # Populate default data
+npm run dev     # Start on port 3001
 
-# Set up frontend (in new terminal)
+# 4. Set up frontend (in new terminal)
 cd ..
 npm install
-cp .env.example .env
-npm run dev   # Start on port 5173
+npm run dev     # Start on port 3000
 ```
 
-Open [http://localhost:5173](http://localhost:5173) to see OmniDesk.
+Open [http://localhost:3000](http://localhost:3000) to see OmniDesk.
 
-📚 **Detailed setup guide:** [docs/QUICK-START.md](docs/QUICK-START.md)
+📚 **For detailed setup instructions, see [docs/SETUP.md](./docs/SETUP.md)**
 
 ## 📊 Architecture
 
 ```
+┌─────────────────────────────────────────┐
+│         Frontend (Next.js)              │
+│   React 19 + TypeScript + Tailwind     │
+└──────────────┬──────────────────────────┘
+               │ HTTP/REST API
+┌──────────────▼──────────────────────────┐
+│      Backend API (Express.js)           │
+│       TypeScript + Node.js              │
+└──────────────┬──────────────────────────┘
+               │ MongoDB Driver
+┌──────────────▼──────────────────────────┐
+│       Database (MongoDB)                │
+│     domains, tasks, ideas, events       │
+└─────────────────────────────────────────┘
+```
+
+**For detailed architecture documentation, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**
+
+## 📖 Project Structure
+
+```
 OmniDesk/
-├── backend/           # Express + MongoDB API
-│   ├── routes/       # API endpoints
-│   └── utils/        # Seed data, helpers
-├── src/
-│   ├── components/   # React components
-│   │   └── Canvas/  # TLDraw infinite canvas
-│   ├── pages/       # Route views
-│   ├── lib/         # Storage adapters (MongoDB/LocalStorage)
-│   └── context/     # Global state management
-└── docs/            # Documentation
+├── app/                   # Next.js App Router pages
+│   ├── dashboard/        # Dashboard view
+│   ├── ideas/            # Ideas board
+│   ├── tasks/            # Task management
+│   └── calendar/         # Calendar view
+├── components/           # React components
+│   ├── ui/              # Reusable UI (shadcn/ui)
+│   └── *.tsx            # Feature components
+├── backend/             # Express + MongoDB API
+│   └── src/
+│       ├── routes/      # API endpoints
+│       ├── config/      # Database setup
+│       └── utils/       # Seed data
+├── lib/                 # Storage adapters, types
+├── context/             # Global state (React Context)
+└── docs/                # Documentation
 ```
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React 19 + TypeScript + Next.js
-- **Backend**: Node.js + Express + TypeScript
-- **Database**: MongoDB
-- **Canvas**: TLDraw (Excalidraw-like)
-- **Drag & Drop**: @hello-pangea/dnd
-- **Styling**: CSS with dark theme
+**Frontend**
+- Next.js 15 (App Router) + React 19
+- TypeScript 5.9
+- Tailwind CSS 4 + shadcn/ui
+- TLDraw (infinite canvas)
+- React Context API (state)
+
+**Backend**
+- Node.js + Express
+- TypeScript
+- MongoDB (native driver)
+- express-validator
+- Helmet + CORS
+
+**Development**
+- Docker (MongoDB)
+- Hot reload
+- ESLint + TypeScript
 
 ## 📖 Documentation
 
-- [Quick Start Guide](docs/QUICK-START.md) - Get up and running
-- [Implementation Progress](docs/IMPLEMENTATION-PROGRESS.md) - Current status & roadmap
-- [Implementation Roadmap](implementation.md) - Detailed phase breakdown
-- [Database Schema](database-structure-NOSQL.md) - MongoDB structure
-- [Product Vision](idea.md) - Core philosophy & design
+**Comprehensive documentation available in [/docs](./docs):**
 
-## 🗺 Roadmap
+- **[Setup Guide](./docs/SETUP.md)** - Installation and configuration
+- **[Architecture](./docs/ARCHITECTURE.md)** - System design and patterns
+- **[API Reference](./docs/API_REFERENCE.md)** - Backend API documentation
+- **[Development Guide](./docs/DEVELOPMENT.md)** - Coding standards and workflows
+- **[Handover Document](./docs/HANDOVER.md)** - Project state and production readiness
+- **[User Guide](./docs/UserGuide.md)** - End-user documentation
+- **[Quick Start](./docs/QUICK-START.md)** - Get up and running
 
-### Phase 1: Core Infrastructure ✅ DONE
-MongoDB backend, seed data, frontend integration, connection status
+## 🗺 Roadmap & Status
 
-### Phase 2: Infinite Canvas 🔨 IN PROGRESS  
-TLDraw integration, canvas per idea, spatial ideas board, thumbnails
+**Current Version**: 0.2.0 (Alpha Development)  
+**Production Readiness**: ~60%
 
-### Phase 3: Task-Idea Lineage ⏳ NEXT
-Conversion flow, bidirectional linking, lineage sidebar
+### ✅ Implemented
+- MongoDB backend with RESTful API
+- Domain-based organization
+- Ideas system with spatial positioning
+- Task management with subtasks
+- Calendar integration
+- Trash system with soft delete
+- Customizable Kanban workflows
+- Modern UI with dark theme
 
-### Phase 4-10: Advanced Features ⏳ PLANNED
-Custom states, Kanban boards, full calendar, terminal, UI polish, auth, production deployment
+### 🔨 In Progress
+- TLDraw infinite canvas per idea
+- Full drag-and-drop for spatial ideas
+- Thought Terminal (quick input)
+- Enhanced calendar view
 
-**Current Progress:** ~20% complete
+### ⏳ Planned
+- User authentication (JWT)
+- Comprehensive testing suite
+- Performance optimization
+- Production deployment setup
+- Real-time collaboration
+- Mobile responsiveness improvements
+
+**For detailed roadmap and project state, see [HANDOVER.md](./docs/HANDOVER.md)**
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+**Development Resources**:
+- [Development Guide](./docs/DEVELOPMENT.md) - Coding standards and workflows
+- [API Reference](./docs/API_REFERENCE.md) - Backend API documentation
+- [Architecture](./docs/ARCHITECTURE.md) - System design patterns
 
 ### Development Workflow
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run linters: `npm run lint`
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes with clear commits
+4. Test locally
 5. Submit a pull request
 
 ## 📸 Screenshots
@@ -139,24 +211,19 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ### Dashboard
 ![Dashboard](https://github.com/user-attachments/assets/4bdc7195-9b4d-44d9-ab69-fb1cb81ce317)
 
-*More screenshots coming as features are implemented*
+## 📄 License
 
-## 🐛 Known Issues
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-- Authentication not yet implemented (using default-user)
-- Canvas thumbnails pending
-- Some loading states missing
-- Mobile responsiveness needs improvement
+## 🙏 Acknowledgments
 
-See [Issues](https://github.com/ak-1344/OmniDesk/issues) for full list.
+- Built with [Next.js](https://nextjs.org/), [React](https://react.dev/), and [MongoDB](https://www.mongodb.com/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Canvas powered by [TLDraw](https://tldraw.dev/)
 
-## 📝 License
+---
 
-Distributed under the MIT License. See [LICENSE](LICENSE) for details.
-
-## 🌟 Acknowledgments
-
-- Inspired by the need for a thinking-first productivity tool
+**For questions or support, please open an issue on GitHub.**- Inspired by the need for a thinking-first productivity tool
 - Built with amazing open-source tools
 - TLDraw for the infinite canvas experience
 
