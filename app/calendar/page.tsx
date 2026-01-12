@@ -124,7 +124,7 @@ export default function CalendarPage() {
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null)
   const [blockReason, setBlockReason] = useState("")
 
-  type EventType = "task-deadline" | "subtask-scheduled" | "personal-event" | "meeting" | "event" | "task" | "idea"
+  type EventType = "task-deadline" | "subtask-scheduled" | "personal-event" | "meeting" | "event" | "task" | "idea" | "blocked"
   
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [newEvent, setNewEvent] = useState({
