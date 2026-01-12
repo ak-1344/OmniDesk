@@ -15,6 +15,7 @@ import type {
   IdeaFolder
 } from '@/types';
 import { getStorage } from '@/lib/storage.factory';
+import { getSyncStatus, onSyncStatusChange, type SyncStatus } from '@/lib/sync';
 import type { IDataStorage } from '@/lib/storage.interface';
 
 // Default settings
@@ -55,6 +56,7 @@ const initialState: AppState = {
 interface AppContextType {
   state: AppState;
   loading: boolean;
+  syncStatus: SyncStatus;
 
   // Domain operations
   addDomain: (domain: Omit<Domain, 'id'>) => Promise<void>;
@@ -104,6 +106,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AppState>(initialState);
   const [trash, setTrash] = useState<TrashItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ 
+    isOnline: false, 
+    pendingChanges: 0, 
+    isSyncing: false 
+  });
   const [storage, setStorage] = useState<IDataStorage | null>(null);
 
   // Initialize storage and load data
@@ -137,7 +144,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           tasks,
           ideas,
           ideaFolders,
-          events,
+          events,sync status changes
+        const unsubscribeSync = onSyncStatusChange((status) => {
+          setSyncStatus(status);
+        });
+        
+        // Get initial sync status
+        const initialStatus = getSyncStatus();
+        setSyncStatus(initialStatus);
+
+        // Subscribe to 
           settings,
         });
         setTrash(trashItems);
@@ -384,6 +400,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const permanentlyDelete = async (id: string) => {
+    syncStatus,
     if (!storage) throw new Error('Storage not initialized');
     await storage.permanentlyDelete(id);
     await refreshTrash();

@@ -10,7 +10,7 @@ export type StorageBackend = 'localstorage' | 'mongodb' | 'sync';
 // Get configured storage backend
 export const getStorageBackend = (): StorageBackend => {
   const backend = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_STORAGE_BACKEND : undefined) || process.env?.NEXT_PUBLIC_STORAGE_BACKEND;
-  return (backend as StorageBackend) || 'localstorage';
+  return (backend as StorageBackend) || 'sync'; // Default to sync (MongoDB primary + localStorage backup)
 };
 
 let storageInstance: IDataStorage | null = null;

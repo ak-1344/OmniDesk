@@ -58,6 +58,7 @@ NODE_ENV=development
 
 # CORS Configuration
 FRONTEND_URL=http://localhost:5173
+CORS_ALLOW_ALL=true # Use only in development to allow * origins
 
 # JWT Configuration (future use)
 # JWT_SECRET=your-secret-key-here
@@ -105,6 +106,9 @@ backend/
 
 ### Health Check
 - `GET /health` - Server health status
+
+### Realtime
+- `GET /api/realtime?user_id=<id>` - Server-Sent Events stream of MongoDB changes for the user
 
 ### Domains
 - `GET /api/domains?user_id=<id>` - Get all domains

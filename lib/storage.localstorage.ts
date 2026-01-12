@@ -370,4 +370,48 @@ export class LocalStorageAdapter implements IDataStorage {
     this.trash = [];
     this.saveTrash();
   }
+
+  // Hydrate local storage with data received from remote backend
+  hydrateFromRemote(partial: Partial<AppState>, trashItems?: TrashItem[]): void {
+    let stateUpdated = false;
+
+    if (partial.domains) {
+      this.state.domains = partial.domains;
+      stateUpdated = true;
+    }
+
+    if (partial.tasks) {
+      this.state.tasks = partial.tasks as Task[];
+      stateUpdated = true;
+    }
+
+    if (partial.ideas) {
+      this.state.ideas = partial.ideas as Idea[];
+      stateUpdated = true;
+    }
+
+    if (partial.ideaFolders) {
+      this.state.ideaFolders = partial.ideaFolders as IdeaFolder[];
+      stateUpdated = true;
+    }
+
+    if (partial.events) {
+      this.state.events = partial.events as CalendarEvent[];
+      stateUpdated = true;
+    }
+
+    if (partial.settings) {
+      this.state.settings = partial.settings as AppSettings;
+      stateUpdated = true;
+    }
+
+    if (stateUpdated) {
+      this.saveState();
+    }
+
+    if (trashItems) {
+      this.trash = trashItems;
+      this.saveTrash();
+    }
+  }
 }

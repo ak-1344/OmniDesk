@@ -4,6 +4,7 @@
 import type { IDataStorage } from './storage.interface';
 import { LocalStorageAdapter } from './storage.localstorage';
 import { MongoDBAdapter } from './storage.mongodb';
+import type { Task, Idea, CalendarEvent } from '@/types';
 
 interface SyncQueueItem {
     id: string;
@@ -20,6 +21,10 @@ class SyncManager {
     private isOnline: boolean = false;
     private syncInProgress: boolean = false;
     private listeners: ((status: SyncStatus) => void)[] = [];
+    private taskSubscribers: Array<(tasks: Task[]) => void> = [];
+    private ideaSubscribers: Array<(ideas: Idea[]) => void> = [];
+    private eventSubscribers: Array<(events: CalendarEvent[]) => void> = [];
+    private realtimeUnsubscribers: Array<() => void> = [];
 
     constructor() {
         this.localStorage = new LocalStorageAdapter();
@@ -27,23 +32,29 @@ class SyncManager {
     }
 
     async initialize(): Promise<IDataStorage> {
-        // Always initialize localStorage first (it's always available)
+        // Always initialize localStorage first (it's always available for backup)
         await this.localStorage.initialize();
 
-        // Try to connect to MongoDB
+        // Try to connect to MongoDB and fetch data
         try {
             this.mongoAdapter = new MongoDBAdapter();
             await this.mongoAdapter.initialize();
             this.isOnline = true;
-            console.log('✅ MongoDB connected, sync enabled');
+            console.log('✅ MongoDB connected - fetching data from remote...');
+
+            // AP Pattern: Fetch from MongoDB first (Availability + Partition tolerance)
+            await this.fetchFromMongoDB();
 
             // Start background sync
             this.startBackgroundSync();
 
-            // Sync any pending changes
+            // Start realtime subscriptions to pull remote changes
+            this.startRealtimeSubscriptions();
+
+            // Sync any pending local changes to MongoDB
             await this.syncPendingChanges();
         } catch (error) {
-            console.log('⚠️ MongoDB unavailable, using localStorage only');
+            console.log('⚠️ MongoDB unavailable, using localStorage only (offline mode)');
             this.isOnline = false;
         }
 
@@ -57,6 +68,18 @@ class SyncManager {
         return new Proxy(this.localStorage, {
             get(target, prop: string) {
                 const value = (target as any)[prop];
+
+                if (prop === 'subscribeToTasks') {
+                    return self.subscribeToTasks.bind(self);
+                }
+
+                if (prop === 'subscribeToIdeas') {
+                    return self.subscribeToIdeas.bind(self);
+                }
+
+                if (prop === 'subscribeToEvents') {
+                    return self.subscribeToEvents.bind(self);
+                }
 
                 if (typeof value !== 'function') {
                     return value;
@@ -160,6 +183,37 @@ class SyncManager {
         this.notifyListeners();
     }
 
+    private async fetchFromMongoDB(): Promise<void> {
+        if (!this.mongoAdapter || !this.isOnline) return;
+
+        try {
+            console.log('📥 Fetching data from MongoDB...');
+            
+            // Fetch all data from MongoDB
+            const [domains, tasks, ideas, ideaFolders, events, settings, trash] = await Promise.all([
+                this.mongoAdapter.getDomains().catch(() => []),
+                this.mongoAdapter.getTasks().catch(() => []),
+                this.mongoAdapter.getIdeas().catch(() => []),
+                this.mongoAdapter.getIdeaFolders().catch(() => []),
+                this.mongoAdapter.getCalendarEvents().catch(() => []),
+                this.mongoAdapter.getSettings().catch(() => this.localStorage.getSettings()),
+                this.mongoAdapter.getTrash().catch(() => []),
+            ]);
+
+            // Hydrate localStorage with MongoDB data
+            this.localStorage.hydrateFromRemote(
+                { domains, tasks, ideas, ideaFolders, events, settings },
+                trash
+            );
+
+            console.log('✅ Successfully loaded data from MongoDB');
+        } catch (error) {
+            console.error('❌ Failed to fetch from MongoDB:', error);
+            console.log('📦 Using cached localStorage data');
+            this.isOnline = false;
+        }
+    }
+
     private startBackgroundSync() {
         // Check connection and sync every 30 seconds
         setInterval(async () => {
@@ -170,6 +224,7 @@ class SyncManager {
                     await this.mongoAdapter.initialize();
                     this.isOnline = true;
                     console.log('✅ MongoDB reconnected');
+                    this.startRealtimeSubscriptions();
                     await this.syncPendingChanges();
                 } catch {
                     // Still offline
@@ -213,6 +268,63 @@ class SyncManager {
         this.listeners.push(callback);
         return () => {
             this.listeners = this.listeners.filter(l => l !== callback);
+        };
+    }
+
+    // Real-time subscription helpers (powered by MongoDB change streams when online)
+    private startRealtimeSubscriptions() {
+        if (!this.mongoAdapter) return;
+        if (this.realtimeUnsubscribers.length) return;
+
+        const taskUnsub = this.mongoAdapter.subscribeToTasks?.((tasks) => {
+            this.localStorage.hydrateFromRemote({ tasks });
+            this.taskSubscribers.forEach(cb => cb(tasks));
+        });
+
+        if (taskUnsub) {
+            this.realtimeUnsubscribers.push(taskUnsub);
+        }
+
+        const ideaUnsub = this.mongoAdapter.subscribeToIdeas?.((ideas) => {
+            this.localStorage.hydrateFromRemote({ ideas });
+            this.ideaSubscribers.forEach(cb => cb(ideas));
+        });
+
+        if (ideaUnsub) {
+            this.realtimeUnsubscribers.push(ideaUnsub);
+        }
+
+        const eventUnsub = this.mongoAdapter.subscribeToEvents?.((events) => {
+            this.localStorage.hydrateFromRemote({ events });
+            this.eventSubscribers.forEach(cb => cb(events));
+        });
+
+        if (eventUnsub) {
+            this.realtimeUnsubscribers.push(eventUnsub);
+        }
+    }
+
+    private subscribeToTasks(callback: (tasks: Task[]) => void): () => void {
+        this.taskSubscribers.push(callback);
+        this.startRealtimeSubscriptions();
+        return () => {
+            this.taskSubscribers = this.taskSubscribers.filter(cb => cb !== callback);
+        };
+    }
+
+    private subscribeToIdeas(callback: (ideas: Idea[]) => void): () => void {
+        this.ideaSubscribers.push(callback);
+        this.startRealtimeSubscriptions();
+        return () => {
+            this.ideaSubscribers = this.ideaSubscribers.filter(cb => cb !== callback);
+        };
+    }
+
+    private subscribeToEvents(callback: (events: CalendarEvent[]) => void): () => void {
+        this.eventSubscribers.push(callback);
+        this.startRealtimeSubscriptions();
+        return () => {
+            this.eventSubscribers = this.eventSubscribers.filter(cb => cb !== callback);
         };
     }
 

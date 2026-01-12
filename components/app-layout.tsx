@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { ThoughtTerminal } from "@/components/thought-terminal"
 import { GlobalTrashTarget } from "@/components/global-trash-target"
 import { Breadcrumbs } from "@/components/breadcrumbs"
+import { OnlineStatusIndicator } from "@/components/online-status-indicator"
 import {
   Sidebar,
   SidebarContent,
@@ -246,6 +247,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <h1 className="text-xl font-medium tracking-tight">{title}</h1>
 
               <div className="flex items-center gap-3">
+                {/* Online/Offline Status */}
+                <OnlineStatusIndicator />
+                
                 {/* Search button */}
                 <button
                   onClick={() => setSearchOpen(true)}

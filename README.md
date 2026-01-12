@@ -12,6 +12,8 @@ OmniDesk is a modern productivity platform that respects how humans actually wor
 
 **Complete documentation is available in the [/docs](./docs) folder:**
 
+- **[Quick Start with MongoDB Sync](./docs/QUICK_START_SYNC.md)** - ⚡ Get started in 3 steps
+- **[MongoDB Sync Setup](./docs/MONGODB_SYNC_SETUP.md)** - 🔄 Detailed sync documentation
 - **[Setup Guide](./docs/SETUP.md)** - Installation and configuration
 - **[Architecture](./docs/ARCHITECTURE.md)** - System design and patterns
 - **[API Reference](./docs/API_REFERENCE.md)** - Backend API documentation
@@ -29,13 +31,14 @@ OmniDesk is a modern productivity platform that respects how humans actually wor
 ## 🚀 Current Features
 
 ### ✅ Implemented (Phase 1)
-- **MongoDB Backend** - Full API with Express + TypeScript
+- **MongoDB-First Architecture** - MongoDB primary with localStorage backup (AP pattern)
+- **Offline-First Sync** - App works offline, syncs when connection restored
+- **Online Status Indicator** - Real-time connection status in UI
 - **Domain Management** - Organize work by life areas (College, Startup, Health, Personal)
 - **Ideas System** - Capture thoughts without commitment pressure
 - **Task Management** - Create and track tasks when you're ready
 - **Calendar Integration** - Time-aware planning
 - **Trash System** - Reversible deletion for peace of mind
-- **Connection Status** - Real-time MongoDB connection indicator
 
 ### 🔨 In Progress (Phase 2)
 - **Infinite Canvas** - TLDraw-powered whiteboard for each idea
@@ -64,16 +67,20 @@ OmniDesk is a modern productivity platform that respects how humans actually wor
 git clone https://github.com/ak-1344/OmniDesk.git
 cd OmniDesk
 
-# 2. Start MongoDB
+# 2. Configure environment
+cp .env.example .env.local
+# Edit .env.local if needed (defaults work out of the box)
+
+# 3. Start MongoDB
 docker run -d -p 27017:27017 --name omnidesk-mongodb mongo:latest
 
-# 3. Set up backend
+# 4. Set up backend
 cd backend
 npm install
 npm run seed    # Populate default data
 npm run dev     # Start on port 3001
 
-# 4. Set up frontend (in new terminal)
+# 5. Set up frontend (in new terminal)
 cd ..
 npm install
 npm run dev     # Start on port 3000
@@ -81,18 +88,41 @@ npm run dev     # Start on port 3000
 
 Open [http://localhost:3000](http://localhost:3000) to see OmniDesk.
 
-📚 **For detailed setup instructions, see [docs/SETUP.md](./docs/SETUP.md)**
-
-## 📊 Architecture
+**OmniDesk implements an AP pattern (Availability + Partition tolerance) from CAP theorem:**
 
 ```
 ┌─────────────────────────────────────────┐
 │         Frontend (Next.js)              │
 │   React 19 + TypeScript + Tailwind     │
 └──────────────┬──────────────────────────┘
-               │ HTTP/REST API
-┌──────────────▼──────────────────────────┐
+               │
+        ┌──────┴──────┐
+        ▼             ▼
+┌──────────────┐ ┌──────────────┐
+│   MongoDB    │ │ localStorage │
+│  (Primary)   │ │  (Backup)    │
+└──────────────┘ └──────────────┘
+        │             │
+        └─────┬───────┘
+              │ Sync Manager
+              ▼
+┌─────────────────────────────────────────┐
 │      Backend API (Express.js)           │
+│       TypeScript + Node.js              │
+└──────────────┬──────────────────────────┘
+               │ MongoDB Driver
+┌──────────────▼──────────────────────────┐
+│       Database (MongoDB)                │
+│     domains, tasks, ideas, events       │
+└─────────────────────────────────────────┘
+```
+
+**Key Features:**
+- ✅ **MongoDB-First**: Fetches data from MongoDB on startup
+- ✅ **localStorage Backup**: Works offline with cached data
+- ✅ **Automatic Sync**: Changes sync to MongoDB when online
+- ✅ **Real-time Updates**: Server-sent events for live data
+- ✅ **Offline-First**: Instant response, background sync    Backend API (Express.js)           │
 │       TypeScript + Node.js              │
 └──────────────┬──────────────────────────┘
                │ MongoDB Driver
@@ -132,7 +162,10 @@ OmniDesk/
 - Next.js 15 (App Router) + React 19
 - TypeScript 5.9
 - Tailwind CSS 4 + shadcn/ui
-- TLDraw (infinite canvas)
+- TLDQuick Start with Sync](./docs/QUICK_START_SYNC.md)** - Get started in 3 steps
+- **[MongoDB Sync Setup](./docs/MONGODB_SYNC_SETUP.md)** - Detailed sync architecture
+- **[Implementation Summary](./docs/IMPLEMENTATION_SUMMARY.md)** - Recent changes and updates
+- **[raw (infinite canvas)
 - React Context API (state)
 
 **Backend**
@@ -143,14 +176,17 @@ OmniDesk/
 - Helmet + CORS
 
 **Development**
-- Docker (MongoDB)
-- Hot reload
-- ESLint + TypeScript
-
-## 📖 Documentation
-
-**Comprehensive documentation available in [/docs](./docs):**
-
+- Docker -first architecture with localStorage backup (AP pattern)
+- Offline-first sync with automatic reconnection
+- Real-time online/offline status indicator
+- Domain-based organization
+- Ideas system with spatial positioning
+- Task management with subtasks
+- Calendar integration
+- Trash system with soft delete
+- Customizable Kanban workflows
+- Modern UI with dark theme
+- RESTful API with Express + MongoDB
 - **[Setup Guide](./docs/SETUP.md)** - Installation and configuration
 - **[Architecture](./docs/ARCHITECTURE.md)** - System design and patterns
 - **[API Reference](./docs/API_REFERENCE.md)** - Backend API documentation
@@ -223,7 +259,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ---
 
-**For questions or support, please open an issue on GitHub.**- Inspired by the need for a thinking-first productivity tool
+**For questions or support, please open an issue on GitHub.**-Storage**: 🔄 MongoDB + localStorage Sync | **Online Status**: ✅ Lived for a thinking-first productivity tool
 - Built with amazing open-source tools
 - TLDraw for the infinite canvas experience
 

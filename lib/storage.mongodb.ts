@@ -15,11 +15,20 @@ const API_URL = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_UR
 
 export class MongoDBAdapter implements IDataStorage {
   private userId: string = 'default-user';
+  private eventSource: EventSource | null = null;
+  private reconnectTimer: number | null = null;
+  private taskSubscribers: Array<(tasks: Task[]) => void> = [];
+  private ideaSubscribers: Array<(ideas: Idea[]) => void> = [];
+  private eventSubscribers: Array<(events: CalendarEvent[]) => void> = [];
 
   async initialize(): Promise<void> {
     // In a real implementation, you would get the user ID from authentication
     // For now, we'll use a default user ID
     this.userId = 'default-user';
+
+    if (typeof window !== 'undefined') {
+      this.startRealtimeStream();
+    }
   }
 
   private async fetchAPI(endpoint: string, options?: RequestInit): Promise<any> {
@@ -238,5 +247,116 @@ export class MongoDBAdapter implements IDataStorage {
 
   async emptyTrash(): Promise<void> {
     await this.fetchAPI(`/trash?user_id=${this.userId}`, { method: 'DELETE' });
+  }
+
+  // Real-time subscriptions backed by server-sent events
+  subscribeToTasks(callback: (tasks: Task[]) => void): () => void {
+    this.taskSubscribers.push(callback);
+    this.startRealtimeStream();
+    this.notifyTasks();
+
+    return () => {
+      this.taskSubscribers = this.taskSubscribers.filter(cb => cb !== callback);
+      this.teardownRealtimeStreamIfIdle();
+    };
+  }
+
+  subscribeToIdeas(callback: (ideas: Idea[]) => void): () => void {
+    this.ideaSubscribers.push(callback);
+    this.startRealtimeStream();
+    this.notifyIdeas();
+
+    return () => {
+      this.ideaSubscribers = this.ideaSubscribers.filter(cb => cb !== callback);
+      this.teardownRealtimeStreamIfIdle();
+    };
+  }
+
+  subscribeToEvents(callback: (events: CalendarEvent[]) => void): () => void {
+    this.eventSubscribers.push(callback);
+    this.startRealtimeStream();
+    this.notifyEvents();
+
+    return () => {
+      this.eventSubscribers = this.eventSubscribers.filter(cb => cb !== callback);
+      this.teardownRealtimeStreamIfIdle();
+    };
+  }
+
+  private startRealtimeStream() {
+    if (typeof window === 'undefined') return;
+    if (this.eventSource || (!this.taskSubscribers.length && !this.ideaSubscribers.length && !this.eventSubscribers.length)) {
+      return;
+    }
+
+    const streamUrl = `${API_URL}/realtime?user_id=${encodeURIComponent(this.userId)}`;
+    this.eventSource = new EventSource(streamUrl, { withCredentials: true });
+
+    this.eventSource.onmessage = (event: MessageEvent) => {
+      this.handleRealtimeMessage(event.data);
+    };
+
+    this.eventSource.onerror = () => {
+      this.eventSource?.close();
+      this.eventSource = null;
+
+      if (this.reconnectTimer === null) {
+        this.reconnectTimer = window.setTimeout(() => {
+          this.reconnectTimer = null;
+          this.startRealtimeStream();
+        }, 5000);
+      }
+    };
+  }
+
+  private teardownRealtimeStreamIfIdle() {
+    if (!this.taskSubscribers.length && !this.ideaSubscribers.length && !this.eventSubscribers.length) {
+      this.eventSource?.close();
+      this.eventSource = null;
+      if (this.reconnectTimer !== null) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+    }
+  }
+
+  private async handleRealtimeMessage(rawData: string) {
+    try {
+      const payload = JSON.parse(rawData) as { entity?: string };
+
+      switch (payload.entity) {
+        case 'task':
+          await this.notifyTasks();
+          break;
+        case 'idea':
+          await this.notifyIdeas();
+          break;
+        case 'event':
+          await this.notifyEvents();
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Failed to handle realtime message:', error);
+    }
+  }
+
+  private async notifyTasks() {
+    if (!this.taskSubscribers.length) return;
+    const tasks = await this.getTasks();
+    this.taskSubscribers.forEach(cb => cb(tasks));
+  }
+
+  private async notifyIdeas() {
+    if (!this.ideaSubscribers.length) return;
+    const ideas = await this.getIdeas();
+    this.ideaSubscribers.forEach(cb => cb(ideas));
+  }
+
+  private async notifyEvents() {
+    if (!this.eventSubscribers.length) return;
+    const events = await this.getCalendarEvents();
+    this.eventSubscribers.forEach(cb => cb(events));
   }
 }
