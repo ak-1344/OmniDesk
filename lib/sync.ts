@@ -39,23 +39,33 @@ class SyncManager {
         try {
             this.mongoAdapter = new MongoDBAdapter();
             await this.mongoAdapter.initialize();
-            this.isOnline = true;
-            console.log('✅ MongoDB connected - fetching data from remote...');
+            
+            // Verify MongoDB is actually reachable
+            const isConnected = await this.checkMongoDBConnection();
+            if (isConnected) {
+                this.isOnline = true;
+                console.log('✅ MongoDB connected - fetching data from remote...');
 
-            // AP Pattern: Fetch from MongoDB first (Availability + Partition tolerance)
-            await this.fetchFromMongoDB();
+                // AP Pattern: Fetch from MongoDB first (Availability + Partition tolerance)
+                await this.fetchFromMongoDB();
 
-            // Start background sync
-            this.startBackgroundSync();
+                // Start background sync
+                this.startBackgroundSync();
 
-            // Start realtime subscriptions to pull remote changes
-            this.startRealtimeSubscriptions();
+                // Start realtime subscriptions to pull remote changes
+                this.startRealtimeSubscriptions();
 
-            // Sync any pending local changes to MongoDB
-            await this.syncPendingChanges();
+                // Sync any pending local changes to MongoDB
+                await this.syncPendingChanges();
+            } else {
+                throw new Error('MongoDB not reachable');
+            }
         } catch (error) {
             console.log('⚠️ MongoDB unavailable, using localStorage only (offline mode)');
             this.isOnline = false;
+            this.mongoAdapter = null;
+            // Still start background sync to attempt reconnection
+            this.startBackgroundSync();
         }
 
         // Return a proxy that uses localStorage but queues changes for MongoDB
@@ -168,8 +178,11 @@ class SyncManager {
             } catch (error) {
                 console.error('Sync failed for item:', item.id, error);
                 // Mark as offline if connection failed
-                if ((error as any).message?.includes('fetch')) {
+                const errorMsg = (error as any).message?.toLowerCase() || '';
+                if (errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('failed')) {
+                    console.log('⚠️ MongoDB connection lost during sync');
                     this.isOnline = false;
+                    this.mongoAdapter = null;
                     break;
                 }
             }
@@ -217,20 +230,35 @@ class SyncManager {
     private startBackgroundSync() {
         // Check connection and sync every 30 seconds
         setInterval(async () => {
-            if (!this.isOnline) {
+            if (!this.isOnline || !this.mongoAdapter) {
                 // Try to reconnect
                 try {
                     this.mongoAdapter = new MongoDBAdapter();
                     await this.mongoAdapter.initialize();
-                    this.isOnline = true;
-                    console.log('✅ MongoDB reconnected');
-                    this.startRealtimeSubscriptions();
-                    await this.syncPendingChanges();
+                    const isConnected = await this.checkMongoDBConnection();
+                    if (isConnected) {
+                        this.isOnline = true;
+                        console.log('✅ MongoDB reconnected');
+                        this.startRealtimeSubscriptions();
+                        await this.syncPendingChanges();
+                    } else {
+                        this.isOnline = false;
+                        this.mongoAdapter = null;
+                    }
                 } catch {
-                    // Still offline
+                    this.isOnline = false;
+                    this.mongoAdapter = null;
                 }
             } else {
-                await this.syncPendingChanges();
+                // Verify connection is still alive
+                const isConnected = await this.checkMongoDBConnection();
+                if (!isConnected) {
+                    console.log('⚠️ MongoDB connection lost');
+                    this.isOnline = false;
+                    this.mongoAdapter = null;
+                } else {
+                    await this.syncPendingChanges();
+                }
             }
             this.notifyListeners();
         }, 30000);
@@ -256,9 +284,22 @@ class SyncManager {
         }
     }
 
+    async checkMongoDBConnection(): Promise<boolean> {
+        if (!this.mongoAdapter) return false;
+        
+        try {
+            // Try a simple fetch to verify MongoDB is reachable
+            await this.mongoAdapter.getDomains();
+            return true;
+        } catch (error) {
+            console.log('MongoDB connection check failed:', error);
+            return false;
+        }
+    }
+
     getStatus(): SyncStatus {
         return {
-            isOnline: this.isOnline,
+            isOnline: this.isOnline && this.mongoAdapter !== null,
             pendingChanges: this.syncQueue.length,
             isSyncing: this.syncInProgress,
         };
