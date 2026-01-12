@@ -144,7 +144,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           tasks,
           ideas,
           ideaFolders,
-          events,sync status changes
+          events,
+          settings,
+        });
+        setTrash(trashItems);
+
+        // Subscribe to sync status changes
         const unsubscribeSync = onSyncStatusChange((status) => {
           setSyncStatus(status);
         });
@@ -152,11 +157,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         // Get initial sync status
         const initialStatus = getSyncStatus();
         setSyncStatus(initialStatus);
-
-        // Subscribe to 
-          settings,
-        });
-        setTrash(trashItems);
 
         // Subscribe to real-time updates if available
         if (storageInstance.subscribeToTasks) {
@@ -400,7 +400,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const permanentlyDelete = async (id: string) => {
-    syncStatus,
     if (!storage) throw new Error('Storage not initialized');
     await storage.permanentlyDelete(id);
     await refreshTrash();
@@ -415,6 +414,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const value: AppContextType = {
     state,
     loading,
+    syncStatus,
     addDomain,
     updateDomain,
     deleteDomain,
